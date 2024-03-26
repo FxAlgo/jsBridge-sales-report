@@ -1,0 +1,24 @@
+{
+	"compilerOptions": {
+		"jsx": "react-jsx",
+		"resolveJsonModule": true,
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"strict": false,
+		"noImplicitOverride": true,
+		"noPropertyAccessFromIndexSignature": false,
+		"noImplicitReturns": true,
+		"noFallthroughCasesInSwitch": true,
+		"target": "es6",
+		"module": "commonjs",
+		"sourceMap": true,
+		"moduleResolution": "node",
+		"allowJs": true,
+		"allowSyntheticDefaultImports": true,
+		"isolatedModules": true,
+		"baseUrl": ".",
+		"types": ["node", "@resconet/jsbridge"]
+	},
+	"include": ["src/**/*.ts", "src/**/*.tsx"],
+	"exclude": ["node_modules", "src/test-setup.ts", "src/**/*.spec.ts", "src/**/__tests__/*.ts"]
+}
