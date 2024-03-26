@@ -1,4 +1,4 @@
-import { Chart as ChartJS } from "chart.js/auto";
+import { Chart as ChartJS, CoreChartOptions } from "chart.js/auto";
 import { useCallback, useRef } from "react";
 
 /*
@@ -27,7 +27,7 @@ type UseChartProps = {
 	destroy: () => void;
 };
 
-export function useChart(data: any, options: any): UseChartProps {
+export function useChart(data: any, options: CoreChartOptions<any>): UseChartProps {
 	const ref = useRef<ChartJS>();
 
 	const create = useCallback(
@@ -66,20 +66,7 @@ export function useChart(data: any, options: any): UseChartProps {
 	return { create, destroy, setData };
 }
 
-const defaultOptions = {
-	plugins: {
-		title: {
-			display: true,
-			text: "Sales...",
-		},
-	},
+const defaultOptions: Partial<CoreChartOptions<any>> = {
 	responsive: true,
-	scales: {
-		x: {
-			stacked: true,
-		},
-		y: {
-			stacked: true,
-		},
-	},
+	// maintainAspectRatio: false,
 };

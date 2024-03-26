@@ -1,22 +1,32 @@
+import { datasetColorOptions } from "../charts/colors";
+
+export type SalesDataset = {
+	labels: string[];
+	datasets: any[];
+};
+
 export class ServiceBridge {
 	async salesDataPerMonth(): Promise<Record<string, unknown>> {
 		return {
 			labels: ServiceBridge.labels,
 			datasets: [
 				{
+					...datasetColorOptions(0.4),
 					label: "2024",
 					data: this.fakeData(12),
-					backgroundColor: "rgb(255, 99, 132)",
+					//backgroundColor: "rgb(255, 99, 132)",
 				},
 				{
+					...datasetColorOptions(0.7),
 					label: "2023",
 					data: this.fakeData(12),
-					backgroundColor: "rgb(75, 192, 192)",
+					//backgroundColor: "rgb(75, 192, 192)",
 				},
 				{
+					...datasetColorOptions(0.9),
 					label: "2022",
 					data: this.fakeData(12),
-					backgroundColor: "rgb(75, 192, 192)",
+					//backgroundColor: "rgb(75, 192, 192)",
 				},
 			],
 		};

@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext, useEffect, useState } from "react";
+import { createContext, ReactNode, useContext, useState } from "react";
 import { ServiceBridge } from "./serviceBridge";
 
 const DataContext = createContext<ServiceBridge>(null);
@@ -8,14 +8,7 @@ type Props = {
 };
 
 export const DataProvider = ({ children }: Props) => {
-	const [service, setService] = useState<ServiceBridge>();
-
-	useEffect(() => {
-		(async () => {
-			// const backendType = await MobileCRM.bridge.invokeCommandPromise("getBackendType", null);
-			setService(new ServiceBridge());
-		})();
-	}, []);
+	const [service] = useState<ServiceBridge>(new ServiceBridge());
 
 	return <DataContext.Provider value={service}>{children}</DataContext.Provider>;
 };

@@ -11,7 +11,7 @@ export const Container = () => {
 			const data = !service ? null : await service.salesDataPerMonth();
 			setData(data);
 		})();
-	}, []);
+	}, [service]);
 
 	return <Chart data={data} options={options} />;
 };
@@ -23,7 +23,6 @@ const options = {
 			text: "Sales...",
 		},
 	},
-	responsive: true,
 	scales: {
 		x: {
 			grouped: true,

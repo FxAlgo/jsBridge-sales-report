@@ -1,5 +1,12 @@
 body,
 html {
-	width: 100%;
 	overflow: hidden;
+}
+
+#root {
+	width: 100%;
+	height: calc(100vh - 20px);
+	display: flex;
+	justify-content: justify-content;
+	align-items: justify-content;
 }
