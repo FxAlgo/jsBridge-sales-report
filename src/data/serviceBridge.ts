@@ -61,7 +61,7 @@ export class ServiceBridge {
 	private async aggregateInvoices(type: DateGroupingType): Promise<any[][]> {
 		const entity = new MobileCRM.FetchXml.Entity("invoice");
 		const now = new Date();
-		const from = new Date(now.getFullYear() - 2, 1, 1);
+		const from = new Date(now.getFullYear() - 2, 0, 1);
 
 		entity.attributes.push(
 			attributeGroup("createdon", "year", "Year"),

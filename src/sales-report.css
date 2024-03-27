@@ -1,6 +1,6 @@
 #root {
 	width: 100%;
-	height: calc(100vh - 60px);
+	height: calc(100vh - 10px);
 	margin: 0px;
 	justify-content: justify-content;
 	align-items: justify-content;
