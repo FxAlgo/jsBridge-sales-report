@@ -68,5 +68,5 @@ export function useChart(data: any, options: CoreChartOptions<any>): UseChartPro
 
 const defaultOptions: Partial<CoreChartOptions<any>> = {
 	responsive: true,
-	// maintainAspectRatio: false,
+	maintainAspectRatio: false,
 };

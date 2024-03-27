@@ -1,4 +1,4 @@
-const baseColors = [
+export const baseColors = [
 	[255, 99, 132],
 	[255, 159, 64],
 	[255, 205, 86],
@@ -8,8 +8,11 @@ const baseColors = [
 	[201, 203, 207],
 ];
 
-const rgbaColors = (opacity: number) => baseColors.map(color => `rgba(${color.join(",")}, ${opacity})`);
-const rgbColors = baseColors.map(color => `rgb(${color.join(",")})`);
+export const rgbaColor = (color: number[], opacity: number) => `rgba(${color.join(",")}, ${opacity})`;
+export const rgbColor = (color: number[]) => `rgb(${color.join(",")})`;
+
+const rgbaColors = (opacity: number) => baseColors.map(color => rgbaColor(color, opacity));
+const rgbColors = baseColors.map(color => rgbColor(color));
 
 export const colors = (opacity: number) => (opacity >= 1 ? rgbColors : rgbaColors(opacity));
 export const datasetColorOptions = (opacity: number) => ({
