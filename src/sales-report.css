@@ -1,6 +1,6 @@
 #root {
 	width: 100%;
-	height: calc(100vh - 10px);
+	height: calc(100vh - 50px);
 	margin: 0px;
 	justify-content: justify-content;
 	align-items: justify-content;
@@ -22,4 +22,38 @@
 	margin: 5px;
 	display: flex;
 	justify-content: center;
+}
+
+.btn-group button {
+	background-color: #04aa6d; /* Green background */
+	border: 1px solid green; /* Green border */
+	color: white; /* White text */
+	padding: 10px 24px; /* Some padding */
+	cursor: pointer; /* Pointer/hand icon */
+	float: left; /* Float the buttons side by side */
+	justify-content: center;
+}
+
+.btn-group button:not(:last-child) {
+	border-right: none; /* Prevent double borders */
+}
+
+.btn-group button:first-child {
+	border-radius: 10px 0 0 10px;
+}
+.btn-group button:last-child {
+	border-radius: 0 10px 10px 0;
+	margin-left: -1px;
+}
+
+/* Clear floats (clearfix hack) */
+.btn-group:after {
+	content: "";
+	clear: both;
+	display: table;
+}
+
+/* Add a background color on hover */
+.btn-group button:hover {
+	background-color: #155e17;
 }

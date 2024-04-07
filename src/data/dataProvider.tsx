@@ -13,4 +13,6 @@ export const DataProvider = ({ children }: Props) => {
 	return <DataContext.Provider value={service}>{children}</DataContext.Provider>;
 };
 
-export const useDataService = () => useContext(DataContext);
+export function useDataService() {
+	return useContext(DataContext);
+}

@@ -1,22 +1,9 @@
 import "@resconet/jsbridge";
+import { Dataset, Datasets, DateGroupingType } from "./datatype";
 import { formatDate } from "./formatDate";
 
-export type SalesDataset = {
-	labels: string[];
-	datasets: any[];
-};
-
-export type DateGroupingType =
-	| "day" // day grouping
-	| "week" // week grouping
-	| "month" // month grouping
-	| "quarter" // quarter grouping
-	| "year" // year grouping
-	| "fiscal-period" // fiscal period grouping
-	| "fiscal-year"; // fiscal year grouping
-
 export class ServiceBridge {
-	async invoices(type: DateGroupingType): Promise<Record<string, unknown>> {
+	async invoices(type: DateGroupingType): Promise<Datasets> {
 		if (type != "month" && type != "quarter") {
 			throw new Error("Invalid date grouping type");
 		}
@@ -36,8 +23,8 @@ export class ServiceBridge {
 		}
 	}
 
-	private toDatasets(data: any[][]): any {
-		const years = {};
+	private toDatasets(data: any[][]): Dataset[] {
+		const years: Record<string, Dataset> = {};
 
 		for (const val of data) {
 			const year = val[0];
@@ -46,7 +33,7 @@ export class ServiceBridge {
 			if (years[year] === undefined) {
 				//const color = baseColors[3 + j];
 				years[year] = {
-					label: `Invoices ${year}`,
+					label: year.toString(),
 					data: new Array(12).fill(0),
 					//backgroundColor: rgbaColor(color, i * 0.3),
 					//borderColor: rgbColor(color),
@@ -59,21 +46,35 @@ export class ServiceBridge {
 	}
 
 	private async aggregateInvoices(type: DateGroupingType): Promise<any[][]> {
-		const entity = new MobileCRM.FetchXml.Entity("invoice");
 		const now = new Date();
-		const from = new Date(now.getFullYear() - 2, 0, 1);
+		const thisYear = now.getFullYear();
+		const from = new Date(thisYear - 2, 0, 1);
 
-		entity.attributes.push(
-			attributeGroup("createdon", "year", "Year"),
-			attributeGroup("createdon", type, "Mon"),
-			attribute("totalamount_base", "sum", "Total"),
-		);
-		entity.filter = new MobileCRM.FetchXml.Filter();
-		entity.filter.where("createdon", "on-or-after", formatDate(from));
+		if (process.env.NODE_ENV === "development") {
+			const data = [];
 
-		const fetch = new MobileCRM.FetchXml.Fetch(entity);
-		fetch.aggregate = true;
-		return await fetch.executeAsync("Array");
+			for (let year = from.getFullYear(); year <= thisYear; year++) {
+				const lastMonth = year === thisYear ? now.getMonth() + 1 : 12;
+				for (let month = 1; month <= lastMonth; month++) {
+					data.push([year, month, fakeData(1)[0]]);
+				}
+			}
+			return data;
+		} else {
+			const entity = new MobileCRM.FetchXml.Entity("invoice");
+
+			entity.attributes.push(
+				attributeGroup("createdon", "year", "Year"),
+				attributeGroup("createdon", type, "Mon"),
+				attribute("totalamount_base", "sum", "Total"),
+			);
+			entity.filter = new MobileCRM.FetchXml.Filter();
+			entity.filter.where("createdon", "on-or-after", formatDate(from));
+
+			const fetch = new MobileCRM.FetchXml.Fetch(entity);
+			fetch.aggregate = true;
+			return await fetch.executeAsync("Array");
+		}
 	}
 
 	private async aggregateInvoiceSummary(): Promise<string> {
