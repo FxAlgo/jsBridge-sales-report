@@ -1,25 +1,29 @@
-import { Dataset, Datasets, DayInSeconds } from "./datatype";
+import { ChartData, ChartDataset, DayInSeconds } from "./types";
 
-export const createCumulativeDataset = (datasets: Datasets, estimate?: boolean) => {
-	const inDatasets = datasets.datasets;
-	const outData = cloneDatasets(datasets);
+export const createCumulativeDataset = (src: ChartData, estimate?: boolean) => {
+	const inDatasets = src.datasets;
+	const outData = cloneDatasets(src);
 
-	if (estimate && inDatasets.length > 1) {
-		const lastIdx = inDatasets.length - 1;
-		outData.datasets[lastIdx] = estimatedDataset(inDatasets[lastIdx], inDatasets[lastIdx - 1]);
+	if (estimate && inDatasets.datasets.length > 1) {
+		const lastIdx = inDatasets.datasets.length - 1;
+		outData.datasets.datasets[lastIdx] = estimatedDataset(inDatasets[lastIdx], inDatasets[lastIdx - 1]);
 	}
 
 	return cumulativeDataset(outData);
 };
 
-const cloneDatasets = (datasets: Datasets): Datasets => {
+const cloneDatasets = (src: ChartData): ChartData => {
+	const datasets = {
+		labels: [...src.datasets.labels],
+		datasets: src.datasets.datasets.map(dataset => cloneDataset(dataset)),
+	};
 	return {
-		labels: [...datasets.labels],
-		datasets: datasets.datasets.map(dataset => cloneDataset(dataset)),
+		datasets,
+		options: src.options,
 	};
 };
 
-const cloneDataset = (dataset: Dataset): Dataset => {
+const cloneDataset = (dataset: ChartDataset): ChartDataset => {
 	return {
 		label: dataset.label,
 		data: [...dataset.data],
@@ -30,30 +34,30 @@ function daysIntoYear(date: Date) {
 	return (Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) - Date.UTC(date.getFullYear(), 0, 0)) / DayInSeconds / 1000;
 }
 
-const cumulativeDataset = (data: Datasets): Datasets => {
-	const outData = {
-		labels: [...data.labels],
+const cumulativeDataset = (data: ChartData): ChartData => {
+	const datasets = {
+		labels: [...data.datasets.labels],
 		datasets: [],
 	};
 
-	for (const dataset of data.datasets) {
+	for (const dataset of data.datasets.datasets) {
 		let sum = 0;
-		outData.datasets.push({
+		datasets.datasets.push({
 			...dataset,
 			data: dataset.data.map((val: number) => (sum += val)),
 		});
 	}
-	return outData;
+	return { datasets, options: data.options };
 };
 
 const daysInMonths = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
-const estimatedDataset = (currentYear: Dataset, prevYear: Dataset): Dataset => {
+const estimatedDataset = (currentYear: ChartDataset, prevYear: ChartDataset): ChartDataset => {
 	let sum = 0;
 	let m = 0;
 	const now = new Date();
 	const thisMonth = now.getMonth();
-	const outData: Dataset = {
+	const outData: ChartDataset = {
 		label: currentYear.label,
 		data: [],
 	};

@@ -2,63 +2,54 @@ import { useEffect, useState } from "react";
 import { Chart } from "../charts";
 import { createCumulativeDataset } from "../data/calculateDataSet";
 import { useDataService } from "../data/dataProvider";
-import { DateGroupingType } from "../data/datatype";
+import { fetchDataTable } from "../data/dataSets";
+import { DataTable, DateGroupingType } from "../data/fetch";
+import { ChartData } from "../data/types";
 import { StatusBox } from "./statusBox";
 
 type Props = {
 	type: DateGroupingType;
+	dataset: DataTable;
 	cumulative?: boolean;
 	estimate?: boolean;
 };
 
 export const Container = (props: Props) => {
 	const service = useDataService();
-	const [pureData, setPureData] = useState<any>(null);
-	const [data, setData] = useState<any>(null);
+	const [pureData, setPureData] = useState<ChartData>(null);
+	const [chartData, setChartData] = useState<ChartData>(null);
 	const [error, setError] = useState<string>(null);
 
 	useEffect(() => {
 		(async () => {
 			try {
-				const data = !service ? null : await service.invoices(props.type || "month");
+				const data = !service ? null : await fetchDataTable(props.dataset, props.type ?? "month");
+
+				//const pureData = await aggregatedFetch(props.dataset, props.type);
+				//setError(JSON.stringify(pureData) + "\n\n\n\n\n\n\n");
+
 				setPureData(data);
 			} catch (e) {
 				setError(e.toString());
 			}
 		})();
-	}, [service, props.type]);
+	}, [service, props.type, props.dataset]);
 
 	useEffect(() => {
 		if (pureData) {
 			if (props.cumulative) {
-				setData(createCumulativeDataset(pureData, props.estimate));
+				setChartData(createCumulativeDataset(pureData, props.estimate));
 			} else {
-				setData(pureData);
+				setChartData(pureData);
 			}
 		}
 	}, [pureData, props.cumulative, props.estimate]);
 
 	if (error) {
 		return <StatusBox error={error} />;
+	} else if (chartData) {
+		return <Chart data={chartData.datasets} options={chartData.options} />;
 	} else {
-		return <Chart data={data} options={options} />;
+		return <StatusBox text="Loading..." />;
 	}
-};
-
-const options = {
-	/*
-	plugins: {
-		title: {
-			display: true,
-			text: "Sales...",
-		},
-	},*/
-	scales: {
-		x: {
-			grouped: true,
-		},
-		y: {
-			grouped: true,
-		},
-	},
 };

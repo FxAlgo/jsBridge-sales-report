@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useDataService } from "../data/dataProvider";
+import { fetchSummary } from "../data/dataSets";
 
 type TextProps = {
 	text?: string;
@@ -20,7 +21,7 @@ export const Summary = () => {
 
 	useEffect(() => {
 		(async () => {
-			const s = await service.invoicesSummary();
+			const s = await fetchSummary("order");
 			setSummary(s);
 		})();
 	}, []);

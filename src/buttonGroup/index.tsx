@@ -6,6 +6,7 @@ type ButtonProps = {
 type ButtonGroupProps = {
 	isSwitchable?: boolean;
 	buttons: ButtonProps[];
+	style?: React.CSSProperties;
 	onSelect: (button: string) => void;
 };
 
@@ -18,5 +19,9 @@ export const ButtonGroup = (props: ButtonGroupProps) => {
 		);
 	});
 
-	return <div className="btn-group">{buttons}</div>;
+	return (
+		<div className="btn-group" style={props.style ?? {}}>
+			{buttons}
+		</div>
+	);
 };

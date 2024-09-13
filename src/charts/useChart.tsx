@@ -1,6 +1,6 @@
-import { Chart as ChartJS, CoreChartOptions } from "chart.js/auto";
+import Chart, { Chart as ChartJS, CoreChartOptions } from "chart.js/auto";
+import annotationPlugin from "chartjs-plugin-annotation";
 import { useCallback, useRef } from "react";
-
 /*
 import {
 	Chart as ChartJS,
@@ -26,6 +26,8 @@ type UseChartProps = {
 	setData: (data: any) => void;
 	destroy: () => void;
 };
+
+Chart.register(annotationPlugin);
 
 export function useChart(data: any, options: CoreChartOptions<any>): UseChartProps {
 	const ref = useRef<ChartJS>();
