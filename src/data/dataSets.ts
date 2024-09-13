@@ -1,6 +1,6 @@
 import "@resconet/jsbridge";
-import { addNextYearsEstimates, estimateThisYear } from "../calculations/estimates";
-import { convertFetchRecords, DataRecord } from "./convertFetchRecords";
+import { addNextYearsEstimates, estimateThisMonth, estimateThisQuarter, estimateThisYear } from "../calculations/estimates";
+import { convertFetchRecords, DataRecord, toValues } from "./convertFetchRecords";
 import { demoData } from "./demoData";
 import { aggregatedFetch, DataTable, DateGroupingType, summaryFetch } from "./fetch";
 import { ChartData, ChartDatasets, DataType } from "./types";
@@ -22,7 +22,7 @@ export async function fetchDataTable(dataset: DataTable, type: DateGroupingType)
 	if (type == "year") {
 		return toYearStackDatasets(records, dataset, hasExtraValues);
 	} else {
-		return toMonthStackDatasets(records, dataset, hasExtraValues);
+		return toMonthStackDatasets(records, dataset, type, hasExtraValues);
 	}
 }
 
@@ -56,55 +56,6 @@ function toDatasets(data: any[], type: DateGroupingType): ChartData {
 	return { datasets: { datasets, labels: labels[type] }, options: groupedBarsOptions };
 }*/
 
-function toYearDatasets(data: DataRecord[]): ChartData {
-	const currentValues = data.length > 0 ? { ...data[data.length - 1] } : undefined;
-	if (estimateThisYear(data)) {
-		addNextYearsEstimates(data);
-	}
-
-	const values = data;
-	const labels = values.map(v => v.name);
-	const datasets = [
-		{
-			label: "Totals",
-			data: values.map(v => v.values[DataType.Total]),
-			borderWidth: 1,
-		},
-	];
-
-	const options: any = { ...stackBarsOptions, ...addAnnotations(currentValues) };
-	addTrendTooltip(options);
-	return { datasets: { datasets, labels }, options };
-
-	/*
-	const labels: string[] = [];
-	const values: number[] = [];
-
-	for (const val of data) {
-		const year = val[0];
-		values.push(+val[2]);
-		labels.push(year.toString());
-	}
-
-	const datasets = [
-		{
-			label: "Total",
-			data: values,
-			borderWidth: 1,
-		},
-	];
-	return {
-		datasets: { datasets, labels },
-		options: {
-			scales: {
-				y: {
-					beginAtZero: true,
-				},
-			},
-		},
-	};*/
-}
-
 function toYearStackDatasets(data: DataRecord[], dataTable: DataTable, hasExtraValues: boolean): ChartData {
 	const currentValues = data.length > 0 ? { ...data[data.length - 1] } : undefined;
 	if (estimateThisYear(data)) {
@@ -117,16 +68,17 @@ function toYearStackDatasets(data: DataRecord[], dataTable: DataTable, hasExtraV
 	return { datasets, options };
 }
 
-function toMonthStackDatasets(data: DataRecord[], dataTable: DataTable, hasExtraValues: boolean): ChartData {
+function toMonthStackDatasets(data: DataRecord[], dataTable: DataTable, type: DateGroupingType, hasExtraValues: boolean): ChartData {
+	const currentValues = data.length > 0 ? { ...data[data.length - 1] } : undefined;
+
+	if (type == "month") {
+		estimateThisMonth(data);
+	} else if (type == "quarter") {
+		estimateThisQuarter(data);
+	}
+
 	const datasets = toDatasets(data, dataTable, hasExtraValues);
-	const options: any = {
-		...stackBarsOptions,
-		plugins: {
-			annotation: {
-				annotations: [],
-			},
-		},
-	};
+	const options: any = { ...stackBarsOptions, ...addAnnotations(currentValues) };
 	addTrendTooltip(options);
 	return { datasets, options };
 }
@@ -138,23 +90,23 @@ function toDatasets(values: DataRecord[], dataTable: DataTable, hasExtraValues: 
 	if (hasExtraValues) {
 		datasets.push({
 			label: `New ${dataTable}s`,
-			data: values.map(v => v.values[DataType.New]),
+			data: toValues(values, DataType.New),
 			borderWidth: 1,
 		});
 		datasets.push({
 			label: "Upsells",
-			data: values.map(v => v.values[DataType.Upsell]),
+			data: toValues(values, DataType.Upsell),
 			borderWidth: 1,
 		});
 		datasets.push({
 			label: "Renewals",
-			data: values.map(v => v.values[DataType.Renewal]),
+			data: toValues(values, DataType.Renewal),
 			borderWidth: 1,
 		});
 	} else {
 		datasets.push({
 			label: `Total ${dataTable}s`,
-			data: values.map(v => v.values[DataType.Total]),
+			data: toValues(values, DataType.Total),
 			borderWidth: 1,
 		});
 	}
@@ -175,18 +127,20 @@ function addTrendTooltip(options: any): void {
 				const thisValue = data[idx];
 				const lastValue = data[idx - 1];
 
-				if (lastValue !== 0) {
-					let result = `Trend: ${Math.round(((thisValue - lastValue) * 100) / lastValue)}%`;
+				const trend = lastValue ? Math.round(((thisValue - lastValue) * 100) / lastValue) : 0;
+				let result = `Trend: ${trend}%`;
 
-					if (allData && allData.length === 3) {
-						let total = 0;
-						for (const { data } of allData) {
-							total += data[idx];
-						}
-						return `Total: ${toEuro(total)}\n` + result;
+				if (allData && allData.length === 3) {
+					let thisTotal = 0;
+					let lastTotal = 0;
+					for (const { data } of allData) {
+						thisTotal += data[idx];
+						lastTotal += data[idx - 1];
 					}
-					return result;
+					const trend = lastValue ? Math.round(((thisTotal - lastTotal) * 100) / lastTotal) : 0;
+					return result + `\nTotal: ${toEuro(thisTotal)} (${trend}%)`;
 				}
+				return result;
 			}
 		}
 		return "";
@@ -220,7 +174,7 @@ function annotation(value: number, borderColor: string, title: string): object {
 			display: true,
 			backgroundColor: "darkgray",
 			borderRadius: 5,
-			content: () => `${title}: ${toEuro(value)}`,
+			content: `${title}: ${toEuro(value)}`,
 			rotation: "auto",
 		},
 	};
@@ -240,6 +194,7 @@ function addAnnotations(lastValue: DataRecord): object {
 	return {
 		plugins: {
 			annotation: {
+				drawTime: "afterDatasetsDraw",
 				annotations,
 			},
 		},

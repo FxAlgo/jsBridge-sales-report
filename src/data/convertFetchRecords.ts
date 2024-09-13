@@ -5,6 +5,7 @@ import { DataType } from "./types";
 export type DataRecord = {
 	sortHelper: number;
 	year: number;
+	month: number;
 	name: string;
 	values: number[];
 };
@@ -14,12 +15,17 @@ export function convertFetchRecords(data: FetchRecord[], dateType: DateGroupingT
 	return consolidateFetchRecord(records);
 }
 
+export function toValues(data: DataRecord[], type: DataType): number[] {
+	return data.map(v => Math.round(v.values[type]));
+}
+
 function mapFetchRecords(data: FetchRecord[], dateType: DateGroupingType): TempRecord[] {
 	const hasType = data && data.length > 0 && data[0].length > 3;
 
 	return data.map(row => ({
 		sortHelper: +row[0] * 12 + +row[1],
 		year: +row[0],
+		month: +row[1],
 		name: createName(row[0], row[1], dateType),
 		value: +row[2],
 		type: hasType ? typeToDataType(row[3]) : DataType.Total,
@@ -29,12 +35,13 @@ function mapFetchRecords(data: FetchRecord[], dateType: DateGroupingType): TempR
 function consolidateFetchRecord(records: TempRecord[]): DataRecord[] {
 	const values: Record<string, DataRecord> = {};
 
-	for (const { sortHelper, name, value, type, year } of records) {
+	for (const { sortHelper, name, value, type, year, month } of records) {
 		if (values[name] === undefined) {
 			values[name] = {
 				sortHelper,
 				name,
 				year,
+				month,
 				values: new Array(4).fill(0),
 			};
 		}
@@ -63,10 +70,7 @@ function typeToDataType(type: string): DataType {
 	return DataType.Renewal;
 }
 
-const labels = {
-	month: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-	quarter: ["Q1", "Q2", "Q3", "Q4"],
-};
+const months: string[] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 function createName(year: string, date: string, type: DateGroupingType): string {
 	if (type == "year") {
@@ -74,7 +78,7 @@ function createName(year: string, date: string, type: DateGroupingType): string 
 	} else if (type == "quarter") {
 		return `${year} Q${date}`;
 	} else {
-		const month = labels.month[+date - 1];
+		const month = months[+date - 1];
 		return date === "1" ? `${month}-${year.substring(2)}` : month;
 	}
 }
@@ -82,6 +86,7 @@ function createName(year: string, date: string, type: DateGroupingType): string 
 type TempRecord = {
 	sortHelper: number;
 	year: number;
+	month: number;
 	name: string;
 	value: number;
 	type: DataType;

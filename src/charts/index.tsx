@@ -4,10 +4,11 @@ import { useChart } from "./useChart";
 export type ChartProps = {
 	data: any;
 	options: any;
+	annotation?: any;
 };
 
-export const Chart = ({ data, options }: ChartProps) => {
-	const { create, setData, destroy } = useChart(data, options);
+export const Chart = ({ data, options, annotation }: ChartProps) => {
+	const { create, setData, destroy } = useChart(data, options, annotation);
 	const element = createRef<any>();
 
 	useEffect(() => {

@@ -1,6 +1,6 @@
 import "@resconet/jsbridge";
 import { DataRecord } from "../data/convertFetchRecords";
-import { DataType } from "../data/types";
+import { DataType, DayInMilliseconds } from "../data/types";
 
 export function estimateThisYear(rec: DataRecord[]): boolean {
 	const now = new Date();
@@ -20,10 +20,45 @@ export function estimateThisYear(rec: DataRecord[]): boolean {
 	return false;
 }
 
+export function estimateThisMonth(rec: DataRecord[]): boolean {
+	if (rec.length > 0) {
+		const last = rec[rec.length - 1];
+		const now = new Date();
+		const startMon = new Date(last.month + "/1/" + last.year).valueOf();
+		const endMon = startMon + 30 * DayInMilliseconds;
+		const nowPart = now.valueOf() - startMon;
+		const factor = nowPart / (endMon - startMon);
+		if (factor > 0.4 && factor < 0.95) {
+			const last = rec[rec.length - 1];
+			last.name += " Est.";
+			last.values = last.values.map(v => v / factor);
+			return true;
+		}
+	}
+	return false;
+}
+
+export function estimateThisQuarter(rec: DataRecord[]): boolean {
+	if (rec.length > 0) {
+		const last = rec[rec.length - 1];
+		const now = new Date();
+		const startMon = new Date(last.month * 3 + "/1/" + last.year).valueOf();
+		const endMon = startMon + 91 * DayInMilliseconds;
+		const nowPart = now.valueOf() - startMon;
+		const factor = nowPart / (endMon - startMon);
+		if (factor > 0.4 && factor < 0.95) {
+			const last = rec[rec.length - 1];
+			last.name += " Est.";
+			last.values = last.values.map(v => v / factor);
+			return true;
+		}
+	}
+	return false;
+}
+
 export function addNextYearsEstimates(rec: DataRecord[], yearNumber: number = 2): boolean {
 	if (rec.length > 2) {
 		for (let i = 0; i < yearNumber; i++) {
-			estimateNextYear(rec);
 			estimateNextYear(rec);
 		}
 		return true;
@@ -37,6 +72,7 @@ function estimateNextYear(rec: DataRecord[]): void {
 	const item: DataRecord = {
 		sortHelper: 0,
 		year: last.year + 1,
+		month: last.month + 1,
 		name: `${last.year + 1} Est.`,
 		values: [
 			calculateCAGR(rec, DataType.New),

@@ -29,7 +29,7 @@ type UseChartProps = {
 
 Chart.register(annotationPlugin);
 
-export function useChart(data: any, options: CoreChartOptions<any>): UseChartProps {
+export function useChart(data: any, options: CoreChartOptions<any>, annotation: any): UseChartProps {
 	const ref = useRef<ChartJS>();
 
 	const create = useCallback(
@@ -51,10 +51,12 @@ export function useChart(data: any, options: CoreChartOptions<any>): UseChartPro
 		(data: any) => {
 			if (ref.current) {
 				ref.current.data = data;
+				ref.current.options.plugins.annotation = annotation;
+				//console.log(JSON.stringify(annotation));
 				ref.current.update();
 			}
 		},
-		[ref.current],
+		[ref.current, annotation],
 	);
 
 	const destroy = () => {

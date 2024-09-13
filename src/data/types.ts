@@ -1,4 +1,5 @@
 export const DayInSeconds = 60 * 60 * 24;
+export const DayInMilliseconds = DayInSeconds * 1000;
 
 export enum DataType {
 	New = 0,

@@ -48,7 +48,8 @@ export const Container = (props: Props) => {
 	if (error) {
 		return <StatusBox error={error} />;
 	} else if (chartData) {
-		return <Chart data={chartData.datasets} options={chartData.options} />;
+		//console.log(JSON.stringify(chartData.options?.plugins?.annotation));
+		return <Chart data={chartData.datasets} options={chartData.options} annotation={chartData.options.plugins.annotation} />;
 	} else {
 		return <StatusBox text="Loading..." />;
 	}
