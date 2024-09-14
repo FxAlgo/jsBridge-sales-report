@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { createCumulativeDataset } from "../calculations/calculateDataSet";
 import { Chart } from "../charts";
 import { useDataService } from "../data/dataProvider";
 import { fetchDataTable } from "../data/dataSets";
@@ -16,9 +15,9 @@ type Props = {
 
 export const Container = (props: Props) => {
 	const service = useDataService();
-	const [pureData, setPureData] = useState<ChartData>(null);
-	const [chartData, setChartData] = useState<ChartData>(null);
-	const [error, setError] = useState<string>(null);
+	const [pureData, setPureData] = useState<ChartData | undefined>(undefined);
+	const [chartData, setChartData] = useState<ChartData | undefined>(undefined);
+	const [error, setError] = useState<string | undefined>(undefined);
 
 	useEffect(() => {
 		(async () => {
@@ -28,8 +27,10 @@ export const Container = (props: Props) => {
 				//const pureData = await aggregatedFetch(props.dataset, props.type);
 				//setError(JSON.stringify(pureData) + "\n\n\n\n\n\n\n");
 
-				setPureData(data);
-			} catch (e) {
+				if (data) {
+					setPureData(data);
+				}
+			} catch (e: any) {
 				setError(e.toString());
 			}
 		})();
@@ -37,11 +38,7 @@ export const Container = (props: Props) => {
 
 	useEffect(() => {
 		if (pureData) {
-			if (props.cumulative) {
-				setChartData(createCumulativeDataset(pureData, props.estimate));
-			} else {
-				setChartData(pureData);
-			}
+			setChartData(pureData);
 		}
 	}, [pureData, props.cumulative, props.estimate]);
 

@@ -8,7 +8,7 @@ export type DateGroupingType =
 	| "year"; // fiscal year grouping
 
 export type DataTable = "invoice" | "order";
-export type FetchRecord = string[];
+export type FetchRecord = (string | null)[];
 export type FetchRecordSets = Record<string, FetchRecord[]>;
 
 export async function aggregatedFetch(datasets: DataTable[], type: DateGroupingType): Promise<FetchRecordSets> {
@@ -35,7 +35,7 @@ export async function summaryFetch(dataset: DataTable): Promise<string> {
 		} else {
 			return await aggregateOrderSummary(from);
 		}
-	} catch (e) {
+	} catch (e: any) {
 		return e.toString();
 	}
 }
@@ -156,7 +156,9 @@ async function aggregateOrderSummary(from: Date): Promise<string> {
 
 function attributeGroup(name: string, dategrouping: DateGroupingType, alias?: string): MobileCRM.FetchXml.Attribute {
 	const attr = new MobileCRM.FetchXml.Attribute(name);
-	attr.alias = alias;
+	if (alias) {
+		attr.alias = alias;
+	}
 	attr.groupby = true;
 	attr.dategrouping = dategrouping;
 	return attr;

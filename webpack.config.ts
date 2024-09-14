@@ -4,7 +4,7 @@ import MiniCssExtractPlugin from "mini-css-extract-plugin";
 import path from "path";
 
 const getConfig = (env: { [key: string]: string }, argv: { [key: string]: string }): any => {
-	const baseConfig = argv.mode === "production" ? productionConfig : debugConfig;
+	const baseConfig = argv["mode"] === "production" ? productionConfig : debugConfig;
 	return {
 		...baseConfig,
 		context: path.resolve(__dirname, "src"),

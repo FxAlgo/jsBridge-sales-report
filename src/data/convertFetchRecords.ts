@@ -5,13 +5,13 @@ import { DataType } from "./types";
 export type DataRecord = {
 	date: number; // year*100 + month/quarter
 	name: string;
-	values: number[];
+	values: number[] | undefined;
 	total: number;
 };
 
 export type DataRecordSet = {
 	data: DataRecord[];
-	currentValues: DataRecord;
+	currentValues: DataRecord | undefined;
 	stackDataType: boolean;
 };
 
@@ -31,7 +31,7 @@ export function convertFetchRecordSets(fetchDataSets: FetchRecordSets, dateType:
 		if (fetchDataSet && fetchDataSet.length > 0) {
 			const records = mapFetchRecords(fetchDataSet, dateType);
 			const data = consolidateFetchRecord(records);
-			let currentValues: DataRecord = undefined;
+			let currentValues: DataRecord | undefined;
 			let stackDataType = false;
 
 			if (data.length > 0) {
@@ -45,18 +45,21 @@ export function convertFetchRecordSets(fetchDataSets: FetchRecordSets, dateType:
 }
 
 export function toValues(data: DataRecord[], type?: DataType): number[] {
-	return data.map(v => Math.round(type !== undefined ? v.values[type] : v.total));
+	return data.map(v => Math.round(v.values !== undefined ? v.values[type as DataType] : v.total));
 }
 
 function mapFetchRecords(data: FetchRecord[], dateType: DateGroupingType): TempRecord[] {
 	const hasType = data && data.length > 0 && data[0].length > 3;
 
-	return data.map(row => ({
-		date: +row[0] * 100 + (row[0] == row[1] ? 0 : +row[1]), // year year fix
-		name: createName(row[0], row[1], dateType),
-		value: +row[2],
-		type: hasType ? typeToDataType(row[3]) : undefined,
-	}));
+	return data.map(row => {
+		const val = row as string[];
+		return {
+			date: +val[0] * 100 + (val[0] == val[1] ? 0 : +val[1]), // year year fix
+			name: createName(val[0], val[1], dateType),
+			value: +val[2],
+			type: hasType ? typeToDataType(val[3]) : undefined,
+		};
+	});
 }
 
 function consolidateFetchRecord(records: TempRecord[]): DataRecord[] {
@@ -74,7 +77,7 @@ function consolidateFetchRecord(records: TempRecord[]): DataRecord[] {
 		const set = values[date];
 		set.total += value;
 		if (set.values) {
-			set.values[type] = value;
+			set.values[type as DataType] = value;
 		}
 	}
 
@@ -117,5 +120,5 @@ type TempRecord = {
 	date: number;
 	name: string;
 	value: number;
-	type: DataType;
+	type: DataType | undefined;
 };

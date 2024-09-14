@@ -13,5 +13,5 @@ export function formatDate(inputDate: Date, format: string = "yyyy-MM-dd"): stri
 		tt: inputDate.getHours() < 12 ? "AM" : "PM",
 	};
 
-	return format.replace(/yyyy|MM|dd|HH|hh|mm|ss|tt/g, match => parts[match]);
+	return format.replace(/yyyy|MM|dd|HH|hh|mm|ss|tt/g, match => (parts as any)[match]);
 }

@@ -16,7 +16,6 @@ export function addEstimates(dataRecordSets: DataRecordSets, type: DateGroupingT
 			}
 		}
 	}
-	return null;
 }
 
 function updateRecord(rec: DataRecord, factor: number): void {
@@ -112,13 +111,9 @@ function estimateNextYear(rec: DataRecord[]): void {
 	rec.push(item);
 }
 
-function calculateCAGR(rec: DataRecord[], type: DataType, years: number = 2): number | undefined {
+function calculateCAGR(rec: DataRecord[], type: DataType | undefined, years: number = 2): number {
 	const len = rec.length;
 	const lastIdx = len - 1;
-
-	if (years < 2 || years > len) {
-		return undefined;
-	}
 
 	// Moving average
 	// let sum = 0;
@@ -127,8 +122,11 @@ function calculateCAGR(rec: DataRecord[], type: DataType, years: number = 2): nu
 	// }
 	//return sum / years;
 
-	const startValue = type !== undefined ? rec[lastIdx].values[type] : rec[lastIdx].total;
-	const endValue = type !== undefined ? rec[lastIdx - years].values[type] : rec[lastIdx - years].total;
+	const startRec = rec[lastIdx];
+	const endRec = rec[lastIdx - years];
+
+	const startValue = startRec.values !== undefined ? startRec.values[type as DataType] : startRec.total;
+	const endValue = endRec.values !== undefined ? endRec.values[type as DataType] : endRec.total;
 	const cagr = Math.pow(startValue / endValue, 1 / years) - 1;
 	return startValue * (1 + cagr);
 }

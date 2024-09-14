@@ -72,7 +72,9 @@ export function useChart(data: ChartDatasets, options: ChartOptions): UseChartPr
 		(data: ChartDatasets, annotation?: ChartAnnotation) => {
 			if (ref.current) {
 				ref.current.data = data;
-				ref.current.options.plugins.annotation = annotation;
+				if (ref.current.options?.plugins) {
+					ref.current.options.plugins.annotation = annotation;
+				}
 				//console.log(JSON.stringify(annotation));
 				ref.current.update();
 			}

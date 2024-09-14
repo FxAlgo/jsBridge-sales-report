@@ -1,4 +1,4 @@
-import { DataTable, DateGroupingType, FetchRecordSets, recordNumberToDate } from "./fetch";
+import { DataTable, DateGroupingType, FetchRecord, FetchRecordSets, recordNumberToDate } from "./fetch";
 
 export function demoData(datasets: DataTable[], type: DateGroupingType): FetchRecordSets {
 	const result: FetchRecordSets = {};
@@ -15,8 +15,8 @@ export function demoData(datasets: DataTable[], type: DateGroupingType): FetchRe
 	return result;
 }
 
-function generateDemoData(type: DateGroupingType): string[][] {
-	const data = [];
+function generateDemoData(type: DateGroupingType): FetchRecord[] {
+	const data: FetchRecord[] = [];
 	const from = recordNumberToDate(type);
 	const now = new Date();
 	const thisYear = now.getFullYear();
@@ -24,7 +24,7 @@ function generateDemoData(type: DateGroupingType): string[][] {
 	for (let year = from.getFullYear(); year <= thisYear; year++) {
 		const lastMonth = year === thisYear ? now.getMonth() + 1 : 12;
 		for (let month = 1; month <= lastMonth; month++) {
-			data.push([year, month, fakeData(1)[0]]);
+			data.push([year.toString(), month.toString(), fakeData(1)[0].toString()]);
 		}
 	}
 	return data;
@@ -38,7 +38,7 @@ function fakeData(count: number, min: number = 0, max: number = 1000000): number
 	return arr;
 }
 
-const demoOrders = [
+const demoOrders: FetchRecord[] = [
 	["2019", "2019", "4262897.0200", null],
 	["2019", "2019", "803122.6500", "New"],
 	["2019", "2019", "5506312.6700", "Renewal"],
@@ -64,7 +64,7 @@ const demoOrders = [
 	["2024", "2024", "847851.7400", "Upsell"],
 ];
 
-const demoOrdersQ = [
+const demoOrdersQ: FetchRecord[] = [
 	["2021", "3", "150212.9400", "Renewal"],
 	["2021", "3", "32976.5900", "New"],
 	["2021", "3", "137628.5700", "Upsell"],
@@ -108,7 +108,7 @@ const demoOrdersQ = [
 	["2024", "3", "2541862.8400", "Renewal"],
 ];
 
-const demoOrdersM = [
+const demoOrdersM: FetchRecord[] = [
 	["2022", "9", "4857.6000", "New"],
 	["2022", "9", "324880.0100", "Renewal"],
 	["2022", "9", "11901.6000", "Upsell"],
@@ -185,7 +185,7 @@ const demoOrdersM = [
 	["2024", "9", "71961.1800", "Upsell"],
 ];
 
-const demoInvoices = [
+const demoInvoices: FetchRecord[] = [
 	["2024", "2024", "9233877.9500"],
 	["2023", "2023", "15216462.3900"],
 	["2022", "2022", "17319655.9200"],

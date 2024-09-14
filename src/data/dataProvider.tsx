@@ -1,16 +1,16 @@
-import { createContext, ReactNode, useContext, useState } from "react";
+import { createContext, ReactNode, useContext } from "react";
 import { ServiceBridge } from "./serviceBridge";
 
-const DataContext = createContext<ServiceBridge>(null);
+const DataContext = createContext<ServiceBridge>(new ServiceBridge());
 
 type Props = {
 	children?: ReactNode;
 };
 
 export const DataProvider = ({ children }: Props) => {
-	const [service] = useState<ServiceBridge>(new ServiceBridge());
+	//const [service] = useState<ServiceBridge>(new ServiceBridge());
 
-	return <DataContext.Provider value={service}>{children}</DataContext.Provider>;
+	return <DataContext.Provider value={DataContext}>{children}</DataContext.Provider>;
 };
 
 export function useDataService() {

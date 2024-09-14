@@ -6,13 +6,13 @@ import { demoData } from "./demoData";
 import { aggregatedFetch, DataTable, DateGroupingType, FetchRecordSets, summaryFetch } from "./fetch";
 import { ChartData, DataType } from "./types";
 
-export async function fetchDataTable(datasets: DataTable[], type: DateGroupingType): Promise<ChartData> {
+export async function fetchDataTable(datasets: DataTable[], type: DateGroupingType): Promise<ChartData | undefined> {
 	if (type != "month" && type != "quarter" && type != "year") {
 		throw new Error("Invalid date grouping type");
 	}
 
 	let data: FetchRecordSets;
-	if (process.env.NODE_ENV === "development") {
+	if (process.env["NODE_ENV"] === "development") {
 		data = demoData(datasets, type);
 	} else {
 		data = await aggregatedFetch(datasets, type);
@@ -57,11 +57,11 @@ function toDatasets(data: any[], type: DateGroupingType): ChartData {
 	return { datasets: { datasets, labels: labels[type] }, options: groupedBarsOptions };
 }*/
 
-function toYearChartDatasets(dataRecordSet: DataRecordSets): ChartData {
+function toYearChartDatasets(dataRecordSet: DataRecordSets): ChartData | undefined {
 	for (const dataTable in dataRecordSet) {
 		return toYearStackDatasets(dataRecordSet[dataTable], dataTable as DataTable);
 	}
-	return null;
+	return undefined;
 }
 
 function toYearStackDatasets(dataSet: DataRecordSet, dataTable: DataTable): ChartData {
@@ -71,11 +71,11 @@ function toYearStackDatasets(dataSet: DataRecordSet, dataTable: DataTable): Char
 	return { datasets, options };
 }
 
-function toMonthChartDatasets(dataRecordSets: DataRecordSets, type: DateGroupingType): ChartData {
+function toMonthChartDatasets(dataRecordSets: DataRecordSets, type: DateGroupingType): ChartData | undefined {
 	for (const dataTable in dataRecordSets) {
 		return toMonthStackDatasets(dataRecordSets[dataTable], dataTable as DataTable, type);
 	}
-	return null;
+	return undefined;
 }
 
 function toMonthStackDatasets(dataSet: DataRecordSet, dataTable: DataTable, type: DateGroupingType): ChartData {
@@ -125,7 +125,7 @@ function toDatasets({ data, stackDataType }: DataRecordSet, dataTable: DataTable
 }
 
 function addTrendTooltip(options: ChartOptions): void {
-	const footer = tooltipItems => {
+	const footer = (tooltipItems: any) => {
 		if (tooltipItems.length > 0) {
 			const item = tooltipItems[0];
 			const idx = item.dataIndex;
@@ -190,7 +190,7 @@ function annotation(value: number, borderColor: string, title: string): object {
 	};
 }
 
-function addAnnotations(lastValue: DataRecord): object {
+function addAnnotations(lastValue: DataRecord | undefined): object {
 	const annotations = [];
 
 	if (lastValue) {
