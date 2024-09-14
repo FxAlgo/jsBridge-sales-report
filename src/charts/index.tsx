@@ -1,6 +1,5 @@
 import { createRef, useEffect } from "react";
-import { ChartDatasets } from "../data/types";
-import { ChartAnnotation, ChartOptions, useChart } from "./useChart";
+import { ChartAnnotation, ChartDatasets, ChartOptions, useChart } from "./useChart";
 
 export type ChartProps = {
 	data: ChartDatasets;

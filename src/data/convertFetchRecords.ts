@@ -1,12 +1,21 @@
 import "@resconet/jsbridge";
-import { DateGroupingType, FetchRecord } from "./fetch";
+import { DateGroupingType, FetchRecord, FetchRecordSets } from "./fetch";
 import { DataType } from "./types";
 
 export type DataRecord = {
 	date: number; // year*100 + month/quarter
 	name: string;
 	values: number[];
+	total: number;
 };
+
+export type DataRecordSet = {
+	data: DataRecord[];
+	currentValues: DataRecord;
+	stackDataType: boolean;
+};
+
+export type DataRecordSets = Record<string, DataRecordSet>;
 
 export function toDate(rec: DataRecord): { year: number; month: number } {
 	const year = Math.floor(rec.date / 100);
@@ -14,13 +23,29 @@ export function toDate(rec: DataRecord): { year: number; month: number } {
 	return { year, month };
 }
 
-export function convertFetchRecords(data: FetchRecord[], dateType: DateGroupingType): DataRecord[] {
-	const records = mapFetchRecords(data, dateType);
-	return consolidateFetchRecord(records);
+export function convertFetchRecordSets(fetchDataSets: FetchRecordSets, dateType: DateGroupingType): DataRecordSets {
+	const result: DataRecordSets = {};
+
+	for (const key in fetchDataSets) {
+		const fetchDataSet = fetchDataSets[key];
+		if (fetchDataSet && fetchDataSet.length > 0) {
+			const records = mapFetchRecords(fetchDataSet, dateType);
+			const data = consolidateFetchRecord(records);
+			let currentValues: DataRecord = undefined;
+			let stackDataType = false;
+
+			if (data.length > 0) {
+				currentValues = { ...data[data.length - 1] };
+				stackDataType = data[0].values !== undefined ? true : false;
+			}
+			result[key] = { data, currentValues, stackDataType };
+		}
+	}
+	return result;
 }
 
-export function toValues(data: DataRecord[], type: DataType): number[] {
-	return data.map(v => Math.round(v.values[type]));
+export function toValues(data: DataRecord[], type?: DataType): number[] {
+	return data.map(v => Math.round(type !== undefined ? v.values[type] : v.total));
 }
 
 function mapFetchRecords(data: FetchRecord[], dateType: DateGroupingType): TempRecord[] {
@@ -30,7 +55,7 @@ function mapFetchRecords(data: FetchRecord[], dateType: DateGroupingType): TempR
 		date: +row[0] * 100 + (row[0] == row[1] ? 0 : +row[1]), // year year fix
 		name: createName(row[0], row[1], dateType),
 		value: +row[2],
-		type: hasType ? typeToDataType(row[3]) : DataType.Total,
+		type: hasType ? typeToDataType(row[3]) : undefined,
 	}));
 }
 
@@ -42,18 +67,23 @@ function consolidateFetchRecord(records: TempRecord[]): DataRecord[] {
 			values[date] = {
 				date,
 				name,
-				values: new Array(4).fill(0),
+				total: 0,
+				values: type !== undefined ? new Array(3).fill(0) : undefined,
 			};
 		}
 		const set = values[date];
-		set.values[DataType.Total] += value;
-		set.values[type] = value;
+		set.total += value;
+		if (set.values) {
+			set.values[type] = value;
+		}
 	}
 
 	const arr = Object.values(values).sort((a, b) => a.date - b.date);
 	for (const set of arr) {
-		const total = set.values[DataType.Total];
-		set.values[DataType.Renewal] = total - (set.values[DataType.New] + set.values[DataType.Upsell]);
+		if (set.values === undefined) {
+			break;
+		}
+		set.values[DataType.Renewal] = set.total - (set.values[DataType.New] + set.values[DataType.Upsell]);
 	}
 	return arr;
 }

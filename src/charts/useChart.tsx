@@ -1,7 +1,7 @@
-import Chart, { Chart as ChartJS, CoreChartOptions } from "chart.js/auto";
+import Chart, { Chart as ChartJS, ChartOptions as ChartOptionsJS, CoreChartOptions } from "chart.js/auto";
 import annotationPlugin from "chartjs-plugin-annotation";
 import { useCallback, useRef } from "react";
-import { ChartDatasets } from "../data/types";
+//import { ChartDatasets } from "../data/types";
 /*
 import {
 	Chart as ChartJS,
@@ -30,8 +30,25 @@ type UseChartProps = {
 
 Chart.register(annotationPlugin);
 
-export type ChartOptions = CoreChartOptions<any>;
+export type ChartSupportedTypes = "bar" | "line";
+export type ChartOptions = ChartOptionsJS<ChartSupportedTypes>;
+//export type ChartDatasets = ChartData<ChartSupportedTypes>;
 export type ChartAnnotation = any;
+
+export type ChartDataset = {
+	label: string;
+	data: number[];
+	type?: ChartSupportedTypes;
+	stack?: string;
+	backgroundColor?: string;
+	borderColor?: string;
+	borderWidth?: number;
+};
+
+export type ChartDatasets = {
+	labels: string[];
+	datasets: ChartDataset[];
+};
 
 export function useChart(data: ChartDatasets, options: ChartOptions): UseChartProps {
 	const ref = useRef<ChartJS>();

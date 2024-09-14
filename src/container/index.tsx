@@ -23,7 +23,7 @@ export const Container = (props: Props) => {
 	useEffect(() => {
 		(async () => {
 			try {
-				const data = !service ? null : await fetchDataTable(props.dataset, props.type ?? "month");
+				const data = !service ? null : await fetchDataTable([props.dataset], props.type ?? "month");
 
 				//const pureData = await aggregatedFetch(props.dataset, props.type);
 				//setError(JSON.stringify(pureData) + "\n\n\n\n\n\n\n");

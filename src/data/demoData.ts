@@ -1,13 +1,18 @@
-import { DataTable, DateGroupingType, recordNumberToDate } from "./fetch";
+import { DataTable, DateGroupingType, FetchRecordSets, recordNumberToDate } from "./fetch";
 
-export function demoData(dataset: DataTable, type: DateGroupingType) {
-	if (type === "year") {
-		return dataset === "order" ? demoOrders : demoInvoices;
-	} else if (type === "quarter") {
-		return demoOrdersQ;
-	} else {
-		return demoOrdersM;
+export function demoData(datasets: DataTable[], type: DateGroupingType): FetchRecordSets {
+	const result: FetchRecordSets = {};
+
+	for (const dataset of datasets) {
+		if (type === "year") {
+			result[dataset] = dataset === "order" ? demoOrders : demoInvoices;
+		} else if (type === "quarter") {
+			result[dataset] = demoOrdersQ;
+		} else {
+			result[dataset] = demoOrdersM;
+		}
 	}
+	return result;
 }
 
 function generateDemoData(type: DateGroupingType): string[][] {

@@ -1,8 +1,31 @@
 import "@resconet/jsbridge";
-import { DataRecord, toDate } from "../data/convertFetchRecords";
+import { DataRecord, DataRecordSets, toDate } from "../data/convertFetchRecords";
+import { DateGroupingType } from "../data/fetch";
 import { DataType, DayInMilliseconds } from "../data/types";
 
-export function estimateThisYear(rec: DataRecord[]): boolean {
+export function addEstimates(dataRecordSets: DataRecordSets, type: DateGroupingType, yearNumber: number = 2): void {
+	for (const dataTable in dataRecordSets) {
+		const data = dataRecordSets[dataTable].data;
+		if (type == "month") {
+			estimateThisMonth(data);
+		} else if (type == "quarter") {
+			estimateThisQuarter(data);
+		} else if (type == "year") {
+			if (estimateThisYear(data)) {
+				addNextYearsEstimates(data, yearNumber);
+			}
+		}
+	}
+	return null;
+}
+
+function updateRecord(rec: DataRecord, factor: number): void {
+	rec.name += " Est.";
+	rec.total /= factor;
+	rec.values = rec.values !== undefined ? rec.values.map(v => v / factor) : undefined;
+}
+
+function estimateThisYear(rec: DataRecord[]): boolean {
 	const now = new Date();
 	const year = now.getFullYear();
 	const startYear = new Date(year, 0, 1).valueOf();
@@ -12,15 +35,13 @@ export function estimateThisYear(rec: DataRecord[]): boolean {
 	const factor = nowPart / yearPart;
 
 	if (rec.length > 0 && factor > 0.4 && factor < 0.95) {
-		const last = rec[rec.length - 1];
-		last.name += " Est.";
-		last.values = last.values.map(v => v / factor);
+		updateRecord(rec[rec.length - 1], factor);
 		return true;
 	}
 	return false;
 }
 
-export function estimateThisMonth(rec: DataRecord[]): boolean {
+function estimateThisMonth(rec: DataRecord[]): boolean {
 	if (rec.length > 0) {
 		const last = rec[rec.length - 1];
 		const { year, month } = toDate(last);
@@ -30,16 +51,14 @@ export function estimateThisMonth(rec: DataRecord[]): boolean {
 		const nowPart = now.valueOf() - startMon;
 		const factor = nowPart / (endMon - startMon);
 		if (factor > 0.4 && factor < 0.95) {
-			const last = rec[rec.length - 1];
-			last.name += " Est.";
-			last.values = last.values.map(v => v / factor);
+			updateRecord(last, factor);
 			return true;
 		}
 	}
 	return false;
 }
 
-export function estimateThisQuarter(rec: DataRecord[]): boolean {
+function estimateThisQuarter(rec: DataRecord[]): boolean {
 	if (rec.length > 0) {
 		const last = rec[rec.length - 1];
 		const { year, month } = toDate(last);
@@ -50,15 +69,14 @@ export function estimateThisQuarter(rec: DataRecord[]): boolean {
 		const nowPart = now.valueOf() - startDate;
 		const factor = nowPart / (endDate - startDate);
 		if (factor > 0.4 && factor < 0.95) {
-			last.name += " Est.";
-			last.values = last.values.map(v => v / factor);
+			updateRecord(last, factor);
 			return true;
 		}
 	}
 	return false;
 }
 
-export function addNextYearsEstimates(rec: DataRecord[], yearNumber: number = 2): boolean {
+function addNextYearsEstimates(rec: DataRecord[], yearNumber: number = 2): boolean {
 	if (rec.length > 2) {
 		for (let i = 0; i < yearNumber; i++) {
 			estimateNextYear(rec);
@@ -80,18 +98,23 @@ function estimateNextYear(rec: DataRecord[]): void {
 	const item: DataRecord = {
 		date: (year + 1) * 100,
 		name: `${year + 1} Est.`,
-		values: [
+		total: calculateCAGR(rec, undefined, usePastYear),
+		values: undefined,
+	};
+
+	if (last.values !== undefined) {
+		item.values = [
 			calculateCAGR(rec, DataType.New, usePastYear),
 			calculateCAGR(rec, DataType.Upsell, usePastYear),
 			calculateCAGR(rec, DataType.Renewal, usePastYear),
-			calculateCAGR(rec, DataType.Total, usePastYear),
-		],
-	};
+		];
+	}
 	rec.push(item);
 }
 
 function calculateCAGR(rec: DataRecord[], type: DataType, years: number = 2): number | undefined {
-	let len = rec.length;
+	const len = rec.length;
+	const lastIdx = len - 1;
 
 	if (years < 2 || years > len) {
 		return undefined;
@@ -104,8 +127,8 @@ function calculateCAGR(rec: DataRecord[], type: DataType, years: number = 2): nu
 	// }
 	//return sum / years;
 
-	const startValue = rec[len - 1].values[type];
-	const endValue = rec[len - years - 1].values[type];
+	const startValue = type !== undefined ? rec[lastIdx].values[type] : rec[lastIdx].total;
+	const endValue = type !== undefined ? rec[lastIdx - years].values[type] : rec[lastIdx - years].total;
 	const cagr = Math.pow(startValue / endValue, 1 / years) - 1;
 	return startValue * (1 + cagr);
 }

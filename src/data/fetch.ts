@@ -9,14 +9,21 @@ export type DateGroupingType =
 
 export type DataTable = "invoice" | "order";
 export type FetchRecord = string[];
+export type FetchRecordSets = Record<string, FetchRecord[]>;
 
-export async function aggregatedFetch(dataset: DataTable, type: DateGroupingType): Promise<FetchRecord[]> {
+export async function aggregatedFetch(datasets: DataTable[], type: DateGroupingType): Promise<FetchRecordSets> {
 	const from = recordNumberToDate(type);
-	if (dataset === "invoice") {
-		return fetchInvoice(from, type);
-	} else {
-		return fetchOrder(from, type);
+	const result: FetchRecordSets = {};
+
+	for (const dataset of datasets) {
+		if (dataset === "invoice") {
+			result[dataset] = await fetchInvoice(from, type);
+		} else {
+			result[dataset] = await fetchOrder(from, type);
+		}
 	}
+
+	return result;
 }
 
 export async function summaryFetch(dataset: DataTable): Promise<string> {
@@ -41,9 +48,13 @@ export function recordNumberToDate(type: DateGroupingType, numberOfSets?: number
 		const date = new Date(now - days);
 		return new Date(date.getFullYear(), date.getMonth(), 1);
 	} else if (type === "quarter") {
-		const days = (numberOfSets ?? 12) * 91 * DayInMilliseconds;
-		const date = new Date(now - days);
-		return new Date(date.getFullYear(), Math.floor(date.getMonth() / 4), 1);
+		if (numberOfSets) {
+			const days = (numberOfSets ?? 12) * 91 * DayInMilliseconds;
+			const date = new Date(now - days);
+			return new Date(date.getFullYear(), Math.floor(date.getMonth() / 4), 1);
+		} else {
+			return new Date(new Date().getFullYear() - 2, 0, 1);
+		}
 	} else {
 		const days = (numberOfSets ?? 8) * 365 * DayInMilliseconds;
 		const date = new Date(now - days);

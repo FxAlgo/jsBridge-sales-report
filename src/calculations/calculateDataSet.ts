@@ -1,4 +1,5 @@
-import { ChartData, ChartDataset, DayInSeconds } from "../data/types";
+import { ChartDataset } from "../charts/useChart";
+import { ChartData, DayInSeconds } from "../data/types";
 
 export const createCumulativeDataset = (src: ChartData, estimate?: boolean) => {
 	const inDatasets = src.datasets;

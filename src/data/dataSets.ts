@@ -1,28 +1,29 @@
 import "@resconet/jsbridge";
-import { addNextYearsEstimates, estimateThisMonth, estimateThisQuarter, estimateThisYear } from "../calculations/estimates";
-import { convertFetchRecords, DataRecord, toValues } from "./convertFetchRecords";
+import { addEstimates } from "../calculations/estimates";
+import { ChartDataset, ChartDatasets, ChartOptions } from "../charts/useChart";
+import { convertFetchRecordSets, DataRecord, DataRecordSet, DataRecordSets, toValues } from "./convertFetchRecords";
 import { demoData } from "./demoData";
-import { aggregatedFetch, DataTable, DateGroupingType, summaryFetch } from "./fetch";
-import { ChartData, ChartDatasets, DataType } from "./types";
+import { aggregatedFetch, DataTable, DateGroupingType, FetchRecordSets, summaryFetch } from "./fetch";
+import { ChartData, DataType } from "./types";
 
-export async function fetchDataTable(dataset: DataTable, type: DateGroupingType): Promise<ChartData> {
+export async function fetchDataTable(datasets: DataTable[], type: DateGroupingType): Promise<ChartData> {
 	if (type != "month" && type != "quarter" && type != "year") {
 		throw new Error("Invalid date grouping type");
 	}
 
-	let data: any[];
+	let data: FetchRecordSets;
 	if (process.env.NODE_ENV === "development") {
-		data = demoData(dataset, type);
+		data = demoData(datasets, type);
 	} else {
-		data = await aggregatedFetch(dataset, type);
+		data = await aggregatedFetch(datasets, type);
 	}
 
-	const hasExtraValues = data && data.length > 0 && data[0].length > 3;
-	const records = convertFetchRecords(data, type);
+	const records = convertFetchRecordSets(data, type);
+	addEstimates(records, type, 2);
 	if (type == "year") {
-		return toYearStackDatasets(records, dataset, hasExtraValues);
+		return toYearChartDatasets(records);
 	} else {
-		return toMonthStackDatasets(records, dataset, type, hasExtraValues);
+		return toMonthChartDatasets(records, type);
 	}
 }
 
@@ -56,57 +57,66 @@ function toDatasets(data: any[], type: DateGroupingType): ChartData {
 	return { datasets: { datasets, labels: labels[type] }, options: groupedBarsOptions };
 }*/
 
-function toYearStackDatasets(data: DataRecord[], dataTable: DataTable, hasExtraValues: boolean): ChartData {
-	const currentValues = data.length > 0 ? { ...data[data.length - 1] } : undefined;
-	if (estimateThisYear(data)) {
-		addNextYearsEstimates(data);
+function toYearChartDatasets(dataRecordSet: DataRecordSets): ChartData {
+	for (const dataTable in dataRecordSet) {
+		return toYearStackDatasets(dataRecordSet[dataTable], dataTable as DataTable);
 	}
+	return null;
+}
 
-	const datasets = toDatasets(data, dataTable, hasExtraValues);
-	const options: any = { ...stackBarsOptions, ...addAnnotations(currentValues) };
+function toYearStackDatasets(dataSet: DataRecordSet, dataTable: DataTable): ChartData {
+	const datasets = toDatasets(dataSet, dataTable);
+	const options: ChartOptions = { ...stackBarsOptions, ...addAnnotations(dataSet.currentValues) };
 	addTrendTooltip(options);
 	return { datasets, options };
 }
 
-function toMonthStackDatasets(data: DataRecord[], dataTable: DataTable, type: DateGroupingType, hasExtraValues: boolean): ChartData {
-	const currentValues = data.length > 0 ? { ...data[data.length - 1] } : undefined;
-
-	if (type == "month") {
-		estimateThisMonth(data);
-	} else if (type == "quarter") {
-		estimateThisQuarter(data);
+function toMonthChartDatasets(dataRecordSets: DataRecordSets, type: DateGroupingType): ChartData {
+	for (const dataTable in dataRecordSets) {
+		return toMonthStackDatasets(dataRecordSets[dataTable], dataTable as DataTable, type);
 	}
+	return null;
+}
 
-	const datasets = toDatasets(data, dataTable, hasExtraValues);
-	const options: any = { ...stackBarsOptions, ...addAnnotations(currentValues) };
+function toMonthStackDatasets(dataSet: DataRecordSet, dataTable: DataTable, type: DateGroupingType): ChartData {
+	const datasets = toDatasets(dataSet, dataTable);
+	const options: ChartOptions = { ...stackBarsOptions, ...addAnnotations(dataSet.currentValues) };
 	addTrendTooltip(options);
 	return { datasets, options };
 }
 
-function toDatasets(values: DataRecord[], dataTable: DataTable, hasExtraValues: boolean): ChartDatasets {
-	const labels = values.map(v => v.name);
-	const datasets = [];
+function toDatasets({ data, stackDataType }: DataRecordSet, dataTable: DataTable): ChartDatasets {
+	const labels = data.map(v => v.name);
+	const datasets: ChartDataset[] = [];
 
-	if (hasExtraValues) {
+	if (stackDataType) {
 		datasets.push({
+			type: "bar",
+			stack: dataTable,
 			label: `New ${dataTable}s`,
-			data: toValues(values, DataType.New),
+			data: toValues(data, DataType.New),
 			borderWidth: 1,
 		});
 		datasets.push({
+			type: "bar",
+			stack: dataTable,
 			label: "Upsells",
-			data: toValues(values, DataType.Upsell),
+			data: toValues(data, DataType.Upsell),
 			borderWidth: 1,
 		});
 		datasets.push({
+			type: "bar",
+			stack: dataTable,
 			label: "Renewals",
-			data: toValues(values, DataType.Renewal),
+			data: toValues(data, DataType.Renewal),
 			borderWidth: 1,
 		});
 	} else {
 		datasets.push({
+			type: "bar",
+			stack: dataTable,
 			label: `Total ${dataTable}s`,
-			data: toValues(values, DataType.Total),
+			data: toValues(data),
 			borderWidth: 1,
 		});
 	}
@@ -114,7 +124,7 @@ function toDatasets(values: DataRecord[], dataTable: DataTable, hasExtraValues: 
 	return { datasets, labels };
 }
 
-function addTrendTooltip(options: any): void {
+function addTrendTooltip(options: ChartOptions): void {
 	const footer = tooltipItems => {
 		if (tooltipItems.length > 0) {
 			const item = tooltipItems[0];
@@ -184,9 +194,9 @@ function addAnnotations(lastValue: DataRecord): object {
 	const annotations = [];
 
 	if (lastValue) {
-		annotations.push(annotation(lastValue.values[DataType.Total], "black", "Current income"));
-		const value = lastValue.values[DataType.New] + lastValue.values[DataType.Upsell];
-		if (value > 0) {
+		annotations.push(annotation(lastValue.total, "black", "Current income"));
+		if (lastValue.values !== undefined) {
+			const value = lastValue.values[DataType.New] + lastValue.values[DataType.Upsell];
 			annotations.push(annotation(value, "gray", "Current new & upsales"));
 		}
 	}
