@@ -1,14 +1,15 @@
 import { createRef, useEffect } from "react";
-import { useChart } from "./useChart";
+import { ChartDatasets } from "../data/types";
+import { ChartAnnotation, ChartOptions, useChart } from "./useChart";
 
 export type ChartProps = {
-	data: any;
-	options: any;
-	annotation?: any;
+	data: ChartDatasets;
+	options: ChartOptions;
+	annotation?: ChartAnnotation;
 };
 
-export const Chart = ({ data, options, annotation }: ChartProps) => {
-	const { create, setData, destroy } = useChart(data, options, annotation);
+export const Chart = ({ data, options }: ChartProps) => {
+	const { create, setData, destroy } = useChart(data, options);
 	const element = createRef<any>();
 
 	useEffect(() => {
@@ -19,7 +20,7 @@ export const Chart = ({ data, options, annotation }: ChartProps) => {
 	}, []);
 
 	useEffect(() => {
-		setData(data);
+		setData(data, (options as any).plugins?.annotation);
 	}, [data]);
 
 	const divStyle = {

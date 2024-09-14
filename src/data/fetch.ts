@@ -1,5 +1,6 @@
 import "@resconet/jsbridge";
 import { formatDate } from "./formatDate";
+import { DayInMilliseconds } from "./types";
 
 export type DateGroupingType =
 	| "month" // month grouping
@@ -34,17 +35,19 @@ export async function summaryFetch(dataset: DataTable): Promise<string> {
 
 export function recordNumberToDate(type: DateGroupingType, numberOfSets?: number): Date {
 	const now = new Date().valueOf();
-	const dayInSec = 24 * 60 * 60 * 1000;
 
 	if (type === "month") {
-		const days = (numberOfSets ?? 24) * 30 * dayInSec;
-		return new Date(now - days);
+		const days = (numberOfSets ?? 24) * 30 * DayInMilliseconds;
+		const date = new Date(now - days);
+		return new Date(date.getFullYear(), date.getMonth(), 1);
 	} else if (type === "quarter") {
-		const days = (numberOfSets ?? 16) * 90 * dayInSec;
-		return new Date(now - days);
+		const days = (numberOfSets ?? 12) * 91 * DayInMilliseconds;
+		const date = new Date(now - days);
+		return new Date(date.getFullYear(), Math.floor(date.getMonth() / 4), 1);
 	} else {
-		const days = (numberOfSets ?? 8) * 365 * dayInSec;
-		return new Date(now - days);
+		const days = (numberOfSets ?? 8) * 365 * DayInMilliseconds;
+		const date = new Date(now - days);
+		return new Date(date.getFullYear(), 0, 1);
 	}
 }
 
@@ -64,6 +67,9 @@ async function fetchOrder(from: Date, type: DateGroupingType, dateType: DateType
 	entity.filter = new MobileCRM.FetchXml.Filter();
 	entity.filter.where(dateType, "on-or-after", formatDate(from));
 	entity.filter.where("statecode", "ne", 2); // 2 = Cancelled
+
+	entity.orderBy("Year", false);
+	entity.orderBy("Date", false);
 
 	const fetch = new MobileCRM.FetchXml.Fetch(entity);
 	fetch.aggregate = true;
@@ -86,6 +92,9 @@ async function fetchInvoice(from: Date, type: DateGroupingType): Promise<FetchRe
 	entity.filter = new MobileCRM.FetchXml.Filter();
 	entity.filter.where("createdon", "on-or-after", formatDate(from));
 	entity.filter.where("statecode", "ne", 3); // 3 = Cancelled
+
+	entity.orderBy("Year", false);
+	entity.orderBy("Date", false);
 
 	const fetch = new MobileCRM.FetchXml.Fetch(entity);
 	fetch.aggregate = true;

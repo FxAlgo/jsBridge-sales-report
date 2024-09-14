@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
+import { createCumulativeDataset } from "../calculations/calculateDataSet";
 import { Chart } from "../charts";
-import { createCumulativeDataset } from "../data/calculateDataSet";
 import { useDataService } from "../data/dataProvider";
 import { fetchDataTable } from "../data/dataSets";
 import { DataTable, DateGroupingType } from "../data/fetch";
@@ -49,7 +49,7 @@ export const Container = (props: Props) => {
 		return <StatusBox error={error} />;
 	} else if (chartData) {
 		//console.log(JSON.stringify(chartData.options?.plugins?.annotation));
-		return <Chart data={chartData.datasets} options={chartData.options} annotation={chartData.options.plugins.annotation} />;
+		return <Chart data={chartData.datasets} options={chartData.options} />;
 	} else {
 		return <StatusBox text="Loading..." />;
 	}

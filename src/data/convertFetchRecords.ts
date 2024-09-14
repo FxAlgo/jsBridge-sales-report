@@ -3,12 +3,16 @@ import { DateGroupingType, FetchRecord } from "./fetch";
 import { DataType } from "./types";
 
 export type DataRecord = {
-	sortHelper: number;
-	year: number;
-	month: number;
+	date: number; // year*100 + month/quarter
 	name: string;
 	values: number[];
 };
+
+export function toDate(rec: DataRecord): { year: number; month: number } {
+	const year = Math.floor(rec.date / 100);
+	const month = rec.date % 100;
+	return { year, month };
+}
 
 export function convertFetchRecords(data: FetchRecord[], dateType: DateGroupingType): DataRecord[] {
 	const records = mapFetchRecords(data, dateType);
@@ -23,9 +27,7 @@ function mapFetchRecords(data: FetchRecord[], dateType: DateGroupingType): TempR
 	const hasType = data && data.length > 0 && data[0].length > 3;
 
 	return data.map(row => ({
-		sortHelper: +row[0] * 12 + +row[1],
-		year: +row[0],
-		month: +row[1],
+		date: +row[0] * 100 + (row[0] == row[1] ? 0 : +row[1]), // year year fix
 		name: createName(row[0], row[1], dateType),
 		value: +row[2],
 		type: hasType ? typeToDataType(row[3]) : DataType.Total,
@@ -33,24 +35,22 @@ function mapFetchRecords(data: FetchRecord[], dateType: DateGroupingType): TempR
 }
 
 function consolidateFetchRecord(records: TempRecord[]): DataRecord[] {
-	const values: Record<string, DataRecord> = {};
+	const values: Record<number, DataRecord> = {};
 
-	for (const { sortHelper, name, value, type, year, month } of records) {
-		if (values[name] === undefined) {
-			values[name] = {
-				sortHelper,
+	for (const { date, name, value, type } of records) {
+		if (values[date] === undefined) {
+			values[date] = {
+				date,
 				name,
-				year,
-				month,
 				values: new Array(4).fill(0),
 			};
 		}
-		const set = values[name];
+		const set = values[date];
 		set.values[DataType.Total] += value;
 		set.values[type] = value;
 	}
 
-	const arr = Object.values(values).sort((a, b) => a.sortHelper - b.sortHelper);
+	const arr = Object.values(values).sort((a, b) => a.date - b.date);
 	for (const set of arr) {
 		const total = set.values[DataType.Total];
 		set.values[DataType.Renewal] = total - (set.values[DataType.New] + set.values[DataType.Upsell]);
@@ -84,9 +84,7 @@ function createName(year: string, date: string, type: DateGroupingType): string 
 }
 
 type TempRecord = {
-	sortHelper: number;
-	year: number;
-	month: number;
+	date: number;
 	name: string;
 	value: number;
 	type: DataType;

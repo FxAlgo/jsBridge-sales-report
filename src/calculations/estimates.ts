@@ -1,12 +1,12 @@
 import "@resconet/jsbridge";
-import { DataRecord } from "../data/convertFetchRecords";
+import { DataRecord, toDate } from "../data/convertFetchRecords";
 import { DataType, DayInMilliseconds } from "../data/types";
 
 export function estimateThisYear(rec: DataRecord[]): boolean {
 	const now = new Date();
 	const year = now.getFullYear();
-	const startYear = new Date("1/1/" + year).valueOf();
-	const endYear = new Date("12/31/" + year).valueOf();
+	const startYear = new Date(year, 0, 1).valueOf();
+	const endYear = new Date(year, 11, 31).valueOf();
 	const nowPart = now.valueOf() - startYear;
 	const yearPart = endYear - startYear;
 	const factor = nowPart / yearPart;
@@ -23,8 +23,9 @@ export function estimateThisYear(rec: DataRecord[]): boolean {
 export function estimateThisMonth(rec: DataRecord[]): boolean {
 	if (rec.length > 0) {
 		const last = rec[rec.length - 1];
+		const { year, month } = toDate(last);
 		const now = new Date();
-		const startMon = new Date(last.month + "/1/" + last.year).valueOf();
+		const startMon = new Date(year, month - 1, 1).valueOf();
 		const endMon = startMon + 30 * DayInMilliseconds;
 		const nowPart = now.valueOf() - startMon;
 		const factor = nowPart / (endMon - startMon);
@@ -41,13 +42,14 @@ export function estimateThisMonth(rec: DataRecord[]): boolean {
 export function estimateThisQuarter(rec: DataRecord[]): boolean {
 	if (rec.length > 0) {
 		const last = rec[rec.length - 1];
+		const { year, month } = toDate(last);
 		const now = new Date();
-		const startMon = new Date(last.month * 3 + "/1/" + last.year).valueOf();
-		const endMon = startMon + 91 * DayInMilliseconds;
-		const nowPart = now.valueOf() - startMon;
-		const factor = nowPart / (endMon - startMon);
+		const startMon = month * 3 - 2;
+		const startDate = new Date(year, startMon - 1, 1).valueOf();
+		const endDate = startDate + 91 * DayInMilliseconds;
+		const nowPart = now.valueOf() - startDate;
+		const factor = nowPart / (endDate - startDate);
 		if (factor > 0.4 && factor < 0.95) {
-			const last = rec[rec.length - 1];
 			last.name += " Est.";
 			last.values = last.values.map(v => v / factor);
 			return true;
@@ -68,36 +70,38 @@ export function addNextYearsEstimates(rec: DataRecord[], yearNumber: number = 2)
 
 function estimateNextYear(rec: DataRecord[]): void {
 	const last = rec[rec.length - 1];
+	const { year } = toDate(last);
+	const usePastYear = 2;
+
+	if (rec.length < usePastYear) {
+		return;
+	}
 
 	const item: DataRecord = {
-		sortHelper: 0,
-		year: last.year + 1,
-		month: last.month + 1,
-		name: `${last.year + 1} Est.`,
+		date: (year + 1) * 100,
+		name: `${year + 1} Est.`,
 		values: [
-			calculateCAGR(rec, DataType.New),
-			calculateCAGR(rec, DataType.Upsell),
-			calculateCAGR(rec, DataType.Renewal),
-			calculateCAGR(rec, DataType.Total),
+			calculateCAGR(rec, DataType.New, usePastYear),
+			calculateCAGR(rec, DataType.Upsell, usePastYear),
+			calculateCAGR(rec, DataType.Renewal, usePastYear),
+			calculateCAGR(rec, DataType.Total, usePastYear),
 		],
 	};
 	rec.push(item);
 }
 
 function calculateCAGR(rec: DataRecord[], type: DataType, years: number = 2): number | undefined {
-	// Moving average
 	let len = rec.length;
-	let sum = 0;
 
-	if (years > len) {
-		years = len;
-	}
-	if (years < 2) {
+	if (years < 2 || years > len) {
 		return undefined;
 	}
-	//	for (let count = 0; count < years; count++) {
+
+	// Moving average
+	// let sum = 0;
+	// for (let count = 0; count < years; count++) {
 	//		sum += rec[--len].values[type];
-	//	}
+	// }
 	//return sum / years;
 
 	const startValue = rec[len - 1].values[type];

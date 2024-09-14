@@ -1,6 +1,7 @@
 import Chart, { Chart as ChartJS, CoreChartOptions } from "chart.js/auto";
 import annotationPlugin from "chartjs-plugin-annotation";
 import { useCallback, useRef } from "react";
+import { ChartDatasets } from "../data/types";
 /*
 import {
 	Chart as ChartJS,
@@ -23,13 +24,16 @@ ChartJS.register(
 
 type UseChartProps = {
 	create: (element: HTMLCanvasElement) => void;
-	setData: (data: any) => void;
+	setData: (data: ChartDatasets, annotation?: ChartAnnotation) => void;
 	destroy: () => void;
 };
 
 Chart.register(annotationPlugin);
 
-export function useChart(data: any, options: CoreChartOptions<any>, annotation: any): UseChartProps {
+export type ChartOptions = CoreChartOptions<any>;
+export type ChartAnnotation = any;
+
+export function useChart(data: ChartDatasets, options: ChartOptions): UseChartProps {
 	const ref = useRef<ChartJS>();
 
 	const create = useCallback(
@@ -48,7 +52,7 @@ export function useChart(data: any, options: CoreChartOptions<any>, annotation: 
 	);
 
 	const setData = useCallback(
-		(data: any) => {
+		(data: ChartDatasets, annotation?: ChartAnnotation) => {
 			if (ref.current) {
 				ref.current.data = data;
 				ref.current.options.plugins.annotation = annotation;
@@ -56,7 +60,7 @@ export function useChart(data: any, options: CoreChartOptions<any>, annotation: 
 				ref.current.update();
 			}
 		},
-		[ref.current, annotation],
+		[ref.current],
 	);
 
 	const destroy = () => {
