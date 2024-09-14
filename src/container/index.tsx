@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Chart } from "../charts";
 import { useDataService } from "../data/dataProvider";
 import { fetchDataTable } from "../data/dataSets";
-import { DataTable, DateGroupingType } from "../data/fetch";
+import { DataTable, DateGroupingType } from "../data/fetch/types";
 import { ChartData } from "../data/types";
 import { StatusBox } from "./statusBox";
 

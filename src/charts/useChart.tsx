@@ -41,9 +41,10 @@ export type ChartDataset = {
 	data: number[];
 	type?: ChartSupportedTypes;
 	stack?: string;
-	backgroundColor?: string;
 	borderColor?: string;
 	borderWidth?: number;
+	backgroundColor?: string;
+	backgroundColorHover?: string;
 };
 
 export type ChartDatasets = {

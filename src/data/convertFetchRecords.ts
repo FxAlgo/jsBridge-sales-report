@@ -11,6 +11,7 @@ export type DataRecord = {
 
 export type DataRecordSet = {
 	data: DataRecord[];
+	name: string;
 	currentValues: DataRecord | undefined;
 	stackDataType: boolean;
 };
@@ -38,7 +39,7 @@ export function convertFetchRecordSets(fetchDataSets: FetchRecordSets, dateType:
 				currentValues = { ...data[data.length - 1] };
 				stackDataType = data[0].values !== undefined ? true : false;
 			}
-			result[key] = { data, currentValues, stackDataType };
+			result[key] = { data, name: key, currentValues, stackDataType };
 		}
 	}
 	return result;

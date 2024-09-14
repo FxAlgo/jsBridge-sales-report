@@ -1,7 +1,8 @@
 import "@resconet/jsbridge";
 import { addEstimates } from "../calculations/estimates";
-import { ChartDataset, ChartDatasets, CharTooltipItem, ChartOptions } from "../charts/useChart";
-import { convertFetchRecordSets, DataRecord, DataRecordSet, DataRecordSets, toValues } from "./convertFetchRecords";
+import { baseColors, Color, rgbaColor, rgbColor } from "../charts/colors";
+import { ChartDataset, CharTooltipItem, ChartOptions } from "../charts/useChart";
+import { convertFetchRecordSets, DataRecordSet, DataRecordSets, toValues } from "./convertFetchRecords";
 import { demoData } from "./demoData";
 import { aggregatedFetch, DataTable, DateGroupingType, FetchRecordSets, summaryFetch } from "./fetch";
 import { ChartData, DataType } from "./types";
@@ -11,6 +12,7 @@ export async function fetchDataTable(datasets: DataTable[], type: DateGroupingTy
 		throw new Error("Invalid date grouping type");
 	}
 
+	datasets = ["order", "invoice"];
 	let data: FetchRecordSets;
 	if (process.env["NODE_ENV"] === "development") {
 		data = demoData(datasets, type);
@@ -57,71 +59,80 @@ function toDatasets(data: any[], type: DateGroupingType): ChartData {
 	return { datasets: { datasets, labels: labels[type] }, options: groupedBarsOptions };
 }*/
 
-function toYearChartDatasets(dataRecordSet: DataRecordSets): ChartData | undefined {
-	for (const dataTable in dataRecordSet) {
-		return toYearStackDatasets(dataRecordSet[dataTable], dataTable as DataTable);
-	}
-	return undefined;
-}
+function toYearChartDatasets(dataRecordSets: DataRecordSets): ChartData | undefined {
+	const charDatasets: ChartDataset[] = [];
+	const options: ChartOptions = { ...stackBarsOptions };
+	let labels: string[] | undefined;
+	let idx = 0;
 
-function toYearStackDatasets(dataSet: DataRecordSet, dataTable: DataTable): ChartData {
-	const datasets = toDatasets(dataSet, dataTable);
-	const options: ChartOptions = { ...stackBarsOptions, ...addAnnotations(dataSet.currentValues) };
-	addTrendTooltip(options);
-	return { datasets, options };
+	for (const dataTable in dataRecordSets) {
+		const dataSet = dataRecordSets[dataTable];
+
+		if (labels === undefined) {
+			labels = dataSet.data.map(v => v.name);
+		}
+		addToDatasets(charDatasets, dataRecordSets[dataTable], baseColors[idx++]);
+		addAnnotations(options, dataSet);
+		addTrendTooltip(options);
+	}
+	return { datasets: { datasets: charDatasets, labels: labels as string[] }, options };
 }
 
 function toMonthChartDatasets(dataRecordSets: DataRecordSets, type: DateGroupingType): ChartData | undefined {
+	const charDatasets: ChartDataset[] = [];
+	const options: ChartOptions = { ...stackBarsOptions };
+	let labels: string[] | undefined;
+	let idx = 0;
+
 	for (const dataTable in dataRecordSets) {
-		return toMonthStackDatasets(dataRecordSets[dataTable], dataTable as DataTable, type);
+		const dataSet = dataRecordSets[dataTable];
+
+		if (labels === undefined) {
+			labels = dataSet.data.map(v => v.name);
+		}
+		addToDatasets(charDatasets, dataRecordSets[dataTable], baseColors[idx++]);
+		addAnnotations(options, dataSet);
+		addTrendTooltip(options);
 	}
-	return undefined;
+	return { datasets: { datasets: charDatasets, labels: labels as string[] }, options };
 }
 
-function toMonthStackDatasets(dataSet: DataRecordSet, dataTable: DataTable, type: DateGroupingType): ChartData {
-	const datasets = toDatasets(dataSet, dataTable);
-	const options: ChartOptions = { ...stackBarsOptions, ...addAnnotations(dataSet.currentValues) };
-	addTrendTooltip(options);
-	return { datasets, options };
-}
-
-function toDatasets({ data, stackDataType }: DataRecordSet, dataTable: DataTable): ChartDatasets {
-	const labels = data.map(v => v.name);
-	const datasets: ChartDataset[] = [];
-
+function addToDatasets(datasets: ChartDataset[], { data, name, stackDataType }: DataRecordSet, color: Color): void {
 	if (stackDataType) {
 		datasets.push({
 			type: "bar",
-			stack: dataTable,
-			label: `New ${dataTable}s`,
+			stack: name,
+			label: `New ${name}s`,
 			data: toValues(data, DataType.New),
+			backgroundColor: rgbColor(color),
 			borderWidth: 1,
 		});
 		datasets.push({
 			type: "bar",
-			stack: dataTable,
+			stack: name,
 			label: "Upsells",
 			data: toValues(data, DataType.Upsell),
+			backgroundColor: rgbaColor(color, 0.7),
 			borderWidth: 1,
 		});
 		datasets.push({
 			type: "bar",
-			stack: dataTable,
+			stack: name,
 			label: "Renewals",
 			data: toValues(data, DataType.Renewal),
+			backgroundColor: rgbaColor(color, 0.5),
 			borderWidth: 1,
 		});
 	} else {
 		datasets.push({
 			type: "bar",
-			stack: dataTable,
-			label: `Total ${dataTable}s`,
+			stack: name,
+			label: `Total ${name}s`,
 			data: toValues(data),
+			backgroundColor: rgbColor(color),
 			borderWidth: 1,
 		});
 	}
-
-	return { datasets, labels };
 }
 
 function addTrendTooltip(options: ChartOptions): void {
@@ -189,25 +200,28 @@ function annotation(value: number, borderColor: string, title: string): object {
 	};
 }
 
-function addAnnotations(lastValue: DataRecord | undefined): object {
-	const annotations = [];
-
-	if (lastValue) {
-		annotations.push(annotation(lastValue.total, "black", "Current income"));
-		if (lastValue.values !== undefined) {
-			const value = lastValue.values[DataType.New] + lastValue.values[DataType.Upsell];
-			annotations.push(annotation(value, "gray", "Current new & upsales"));
-		}
+function addAnnotations(options: ChartOptions, dataSet: DataRecordSet): void {
+	if (!options.plugins) {
+		options.plugins = {};
 	}
 
-	return {
-		plugins: {
-			annotation: {
-				drawTime: "afterDatasetsDraw",
-				annotations,
-			},
-		},
-	};
+	if (options.plugins.annotation === undefined) {
+		options.plugins.annotation = {
+			//drawTime: "afterDatasetsDraw",
+			annotations: [],
+		};
+	}
+
+	if (dataSet.currentValues) {
+		const annotations = options.plugins.annotation.annotations as any[];
+		const { values, total } = dataSet.currentValues;
+
+		annotations.push(annotation(total, "gray", `Actual ${dataSet.name}s`));
+		if (values !== undefined) {
+			const value = values[DataType.New] + values[DataType.Upsell];
+			annotations.push(annotation(value, "gray", "Actual new & upsales"));
+		}
+	}
 }
 
 const groupedBarsOptions = {
