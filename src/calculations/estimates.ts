@@ -1,4 +1,3 @@
-import "@resconet/jsbridge";
 import { DataRecord, DataRecordSets, toDate } from "../data/convertFetchRecords";
 import { DateGroupingType } from "../data/fetch";
 import { DataType, DayInMilliseconds } from "../data/types";

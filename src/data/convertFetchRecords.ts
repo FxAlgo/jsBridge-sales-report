@@ -1,4 +1,3 @@
-import "@resconet/jsbridge";
 import { DateGroupingType, FetchRecord, FetchRecordSets } from "./fetch";
 import { DataType } from "./types";
 

@@ -1,4 +1,3 @@
-import "@resconet/jsbridge";
 import { addEstimates } from "../calculations/estimates";
 import { baseColors, Color, rgbaColor, rgbColor } from "../charts/colors";
 import { ChartDataset, CharTooltipItem, ChartOptions } from "../charts/useChart";
@@ -124,15 +123,20 @@ function addToDatasets(datasets: ChartDataset[], { data, name, stackDataType }: 
 			borderWidth: 1,
 		});
 	} else {
+		const label = `${capitalize(name)}s`;
 		datasets.push({
 			type: "bar",
 			stack: name,
-			label: `Total ${name}s`,
+			label,
 			data: toValues(data),
 			backgroundColor: rgbColor(color),
 			borderWidth: 1,
 		});
 	}
+}
+
+function capitalize(s: string): string {
+	return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 function addTrendTooltip(options: ChartOptions): void {

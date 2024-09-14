@@ -41,19 +41,12 @@ const App = () => {
 			<Container type={type ?? "year"} dataset={dataSet ?? "order"} cumulative={cumulative} estimate={estimate} />
 			<div style={{ display: "flex", justifyContent: "center" }}>
 				<ButtonGroup
-					style={{ marginRight: "1rem" }}
+					//style={{ marginRight: "1rem" }}
 					onSelect={onTypeSelect}
 					buttons={[
-						{ title: "Y", value: "year" },
-						{ title: "Q", value: "quarter" },
-						{ title: "M", value: "month" },
-					]}
-				/>
-				<ButtonGroup
-					onSelect={onSelect}
-					buttons={[
-						{ title: "Orders", value: "order" },
-						{ title: "Invoices", value: "invoice" },
+						{ title: "Year", value: "year" },
+						{ title: "Quarter", value: "quarter" },
+						{ title: "Month", value: "month" },
 					]}
 				/>
 			</div>

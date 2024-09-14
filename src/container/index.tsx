@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Chart } from "../charts";
 import { useDataService } from "../data/dataProvider";
 import { fetchDataTable } from "../data/dataSets";
-import { DataTable, DateGroupingType } from "../data/fetch/types";
+import { DataTable, DateGroupingType } from "../data/fetch";
 import { ChartData } from "../data/types";
 import { StatusBox } from "./statusBox";
 
@@ -24,7 +24,7 @@ export const Container = (props: Props) => {
 			try {
 				const data = !service ? null : await fetchDataTable([props.dataset], props.type ?? "month");
 
-				//const pureData = await aggregatedFetch(props.dataset, props.type);
+				//const pureData = await aggregatedFetch(["opportunity"], props.type);
 				//setError(JSON.stringify(pureData) + "\n\n\n\n\n\n\n");
 
 				if (data) {
