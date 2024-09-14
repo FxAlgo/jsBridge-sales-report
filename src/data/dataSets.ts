@@ -1,6 +1,6 @@
 import "@resconet/jsbridge";
 import { addEstimates } from "../calculations/estimates";
-import { ChartDataset, ChartDatasets, ChartOptions } from "../charts/useChart";
+import { ChartDataset, ChartDatasets, CharTooltipItem, ChartOptions } from "../charts/useChart";
 import { convertFetchRecordSets, DataRecord, DataRecordSet, DataRecordSets, toValues } from "./convertFetchRecords";
 import { demoData } from "./demoData";
 import { aggregatedFetch, DataTable, DateGroupingType, FetchRecordSets, summaryFetch } from "./fetch";
@@ -125,17 +125,16 @@ function toDatasets({ data, stackDataType }: DataRecordSet, dataTable: DataTable
 }
 
 function addTrendTooltip(options: ChartOptions): void {
-	const footer = (tooltipItems: any) => {
+	const footer = (tooltipItems: CharTooltipItem[]) => {
 		if (tooltipItems.length > 0) {
 			const item = tooltipItems[0];
 			const idx = item.dataIndex;
-			let trend = 0;
 
 			if (idx > 0) {
 				const data = item.dataset.data;
 				const allData = item.chart.data?.datasets;
-				const thisValue = data[idx];
-				const lastValue = data[idx - 1];
+				const thisValue = data[idx] as number;
+				const lastValue = data[idx - 1] as number;
 
 				const trend = lastValue ? Math.round(((thisValue - lastValue) * 100) / lastValue) : 0;
 				let result = `Trend: ${trend}%`;
@@ -144,8 +143,8 @@ function addTrendTooltip(options: ChartOptions): void {
 					let thisTotal = 0;
 					let lastTotal = 0;
 					for (const { data } of allData) {
-						thisTotal += data[idx];
-						lastTotal += data[idx - 1];
+						thisTotal += data[idx] as number;
+						lastTotal += data[idx - 1] as number;
 					}
 					const trend = lastValue ? Math.round(((thisTotal - lastTotal) * 100) / lastTotal) : 0;
 					return result + `\nTotal: ${toEuro(thisTotal)} (${trend}%)`;

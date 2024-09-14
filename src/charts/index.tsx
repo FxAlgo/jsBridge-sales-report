@@ -19,7 +19,7 @@ export const Chart = ({ data, options }: ChartProps) => {
 	}, []);
 
 	useEffect(() => {
-		setData(data, (options as any).plugins?.annotation);
+		setData(data, options.plugins?.annotation);
 	}, [data]);
 
 	const divStyle = {

@@ -1,4 +1,4 @@
-import Chart, { Chart as ChartJS, ChartOptions as ChartOptionsJS, CoreChartOptions } from "chart.js/auto";
+import Chart, { Chart as ChartJS, ChartOptions as ChartOptionsJS, TooltipItem } from "chart.js/auto";
 import annotationPlugin from "chartjs-plugin-annotation";
 import { useCallback, useRef } from "react";
 //import { ChartDatasets } from "../data/types";
@@ -32,6 +32,7 @@ Chart.register(annotationPlugin);
 
 export type ChartSupportedTypes = "bar" | "line";
 export type ChartOptions = ChartOptionsJS<ChartSupportedTypes>;
+export type CharTooltipItem = TooltipItem<ChartSupportedTypes>;
 //export type ChartDatasets = ChartData<ChartSupportedTypes>;
 export type ChartAnnotation = any;
 
@@ -93,7 +94,7 @@ export function useChart(data: ChartDatasets, options: ChartOptions): UseChartPr
 	return { create, destroy, setData };
 }
 
-const defaultOptions: Partial<CoreChartOptions<any>> = {
+const defaultOptions: Partial<ChartOptions> = {
 	responsive: true,
 	maintainAspectRatio: false,
 };
