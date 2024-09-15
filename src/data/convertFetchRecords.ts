@@ -83,7 +83,10 @@ function uniqueDates(dataSets: DataRecordSets): Record<number, number> {
 }
 
 function calculateValueSummary(title: string, currentValues: number, previousValues: number): ValueSummary {
-	const trend = previousValues ? Math.round(((currentValues - previousValues) * 100) / previousValues) : 0;
+	const current = Math.abs(currentValues);
+	const previous = Math.abs(previousValues);
+
+	const trend = previous ? Math.round(((current - previous) * 100) / previous) : 0;
 	return { value: currentValues, label: `${title}: ${toEuro(currentValues)} (${trend}%)` };
 }
 

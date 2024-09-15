@@ -70,7 +70,7 @@ function toIncomeExpensesChartDatasets(dataRecordSets: DataRecordSets): ChartDat
 			labels = dataSet.data.map(v => v.name);
 		}
 		addToDatasets(charDatasets, dataSet, dataTable === "profit" ? dataTable : undefined);
-		//addAnnotations(options, dataSet);
+		addAnnotations(options, dataSet);
 		addTrendTooltip(options);
 	}
 	return { datasets: { datasets: charDatasets, labels: labels as string[] }, options };
