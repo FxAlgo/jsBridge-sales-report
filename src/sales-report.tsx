@@ -1,52 +1,46 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { createRoot } from "react-dom/client";
 import { ButtonGroup } from "./buttonGroup";
-import { Container } from "./container";
+import { AnalyzeType, Container } from "./container";
 import { DataProvider } from "./data/dataProvider";
-import { DataTable, DateGroupingType } from "./data/fetch";
+import { DateGroupingType } from "./data/fetch";
 import "./sales-report.css";
 
 const root = createRoot(document.getElementById("root") as HTMLElement);
 const searchParams = new URLSearchParams(window.location.search);
 
 const App = () => {
-	const [type, setType] = useState<DateGroupingType>((searchParams?.get("type") as DateGroupingType) ?? "year");
-	const [dataSet, setDataSet] = useState<DataTable>((searchParams?.get("dataset") as DataTable) ?? "order");
-	const [cumulative, setCumulative] = useState<boolean>(searchParams && searchParams.get("cumulative") ? true : false);
-	const [estimate, setEstimate] = useState<boolean>(searchParams && searchParams.get("estimate") ? true : false);
+	const [period, setPeriodType] = useState<DateGroupingType>((searchParams?.get("type") as DateGroupingType) ?? "year");
+	const [analyzeType, setAnalyzeType] = useState<AnalyzeType>((searchParams?.get("analyzeType") as AnalyzeType) ?? "sale");
+	//const [cumulative, setCumulative] = useState<boolean>(searchParams && searchParams.get("cumulative") ? true : false);
+	//const [estimate, setEstimate] = useState<boolean>(searchParams && searchParams.get("estimate") ? true : false);
 
-	useEffect(() => {
-		//
-	}, [cumulative]);
-
-	const onSelect = (value: string) => {
-		if (value === "order" || value === "invoice") {
-			setDataSet(value);
-		} else if (value === "Cumulative") {
-			setCumulative(true);
-		} else if (value === "Estimate") {
-			setEstimate(true);
-		}
-	};
-
-	const onTypeSelect = (value: string) => {
+	const onPeriodSelect = (value: string) => {
 		if (value === "month" || value === "quarter" || value === "year") {
-			setType(value);
-			setCumulative(false);
+			setPeriodType(value);
+			//setCumulative(false);
 		}
 	};
 
 	return (
 		<DataProvider>
-			<Container type={type ?? "year"} dataset={dataSet ?? "order"} cumulative={cumulative} estimate={estimate} />
+			<Container type={period ?? "year"} analyzeType={analyzeType} />
 			<div style={{ display: "flex", justifyContent: "center" }}>
 				<ButtonGroup
-					//style={{ marginRight: "1rem" }}
-					onSelect={onTypeSelect}
+					style={{ marginRight: "1rem" }}
+					onSelect={onPeriodSelect}
 					buttons={[
 						{ title: "Year", value: "year" },
 						{ title: "Quarter", value: "quarter" },
 						{ title: "Month", value: "month" },
+					]}
+				/>
+				<ButtonGroup
+					//style={{ marginRight: "1rem" }}
+					onSelect={(a: string) => setAnalyzeType(a as AnalyzeType)}
+					buttons={[
+						{ title: "Sale", value: "sale" },
+						{ title: "Profit", value: "profit" },
 					]}
 				/>
 			</div>

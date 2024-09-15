@@ -1,4 +1,5 @@
 import { DayInMilliseconds } from "../types";
+import { fetchCosts } from "./fetchCosts";
 import { aggregateInvoiceSummary, fetchInvoices } from "./fetchInvoices";
 import { fetchOpportunities } from "./fetchOpportunities";
 import { aggregateOrderSummary, fetchOrders } from "./fetchOrders";
@@ -15,6 +16,8 @@ export async function aggregatedFetch(datasets: DataTable[], type: DateGroupingT
 			result[dataset] = await fetchOrders(from, type);
 		} else if (dataset === "opportunity") {
 			result[dataset] = await fetchOpportunities(from, type);
+		} else if (dataset === "cost") {
+			result[dataset] = fetchCosts(type);
 		}
 	}
 

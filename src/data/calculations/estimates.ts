@@ -1,6 +1,6 @@
-import { DataRecord, DataRecordSets, toDate } from "../data/convertFetchRecords";
-import { DateGroupingType } from "../data/fetch";
-import { DataType, DayInMilliseconds } from "../data/types";
+import { DataRecord, DataRecordSets, toDate } from "../convertFetchRecords";
+import { DateGroupingType } from "../fetch";
+import { DataType, DayInMilliseconds } from "../types";
 
 export function addEstimates(dataRecordSets: DataRecordSets, type: DateGroupingType, yearNumber: number = 2): void {
 	for (const dataTable in dataRecordSets) {

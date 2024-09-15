@@ -1,4 +1,5 @@
 import { DataTable, DateGroupingType, FetchRecord, FetchRecordSets, recordNumberToDate } from "../fetch";
+import { fetchCosts } from "../fetch/fetchCosts";
 import { demoInvoices } from "./demoInvoices";
 import { demoOpportunities } from "./demoOpportunities";
 import { demoOrders, demoOrdersM, demoOrdersQ } from "./demoOrders";
@@ -7,7 +8,9 @@ export function demoData(datasets: DataTable[], type: DateGroupingType): FetchRe
 	const result: FetchRecordSets = {};
 
 	for (const dataset of datasets) {
-		if (type === "year") {
+		if (dataset === "cost") {
+			result[dataset] = fetchCosts(type);
+		} else if (type === "year") {
 			switch (dataset) {
 				case "order":
 					result[dataset] = demoOrders;

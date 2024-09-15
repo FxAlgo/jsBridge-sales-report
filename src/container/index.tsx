@@ -1,16 +1,18 @@
 import { useEffect, useState } from "react";
 import { Chart } from "../charts";
 import { useDataService } from "../data/dataProvider";
-import { fetchDataTable } from "../data/dataSets";
-import { DataTable, DateGroupingType } from "../data/fetch";
+import { prepareIncomeChart, prepareIncomeExpensesChart } from "../data/dataSets";
+import { DateGroupingType } from "../data/fetch";
 import { ChartData } from "../data/types";
 import { StatusBox } from "./statusBox";
 
+export type AnalyzeType = "sale" | "profit";
 type Props = {
 	type: DateGroupingType;
-	dataset: DataTable;
-	cumulative?: boolean;
-	estimate?: boolean;
+	analyzeType: AnalyzeType;
+	//dataset: DataTable;
+	//cumulative?: boolean;
+	//estimate?: boolean;
 };
 
 export const Container = (props: Props) => {
@@ -22,25 +24,30 @@ export const Container = (props: Props) => {
 	useEffect(() => {
 		(async () => {
 			try {
-				const data = !service ? null : await fetchDataTable([props.dataset], props.type ?? "month");
+				const type = props.type ?? "month";
+				if (type != "month" && type != "quarter" && type != "year") {
+					throw new Error("Invalid date grouping type");
+				}
 
 				//const pureData = await aggregatedFetch(["opportunity"], props.type);
 				//setError(JSON.stringify(pureData) + "\n\n\n\n\n\n\n");
 
-				if (data) {
-					setPureData(data);
+				if (props.analyzeType === "sale") {
+					setPureData(await prepareIncomeChart(type));
+				} else if (props.analyzeType === "profit") {
+					setPureData(await prepareIncomeExpensesChart(type));
 				}
 			} catch (e: any) {
 				setError(e.toString());
 			}
 		})();
-	}, [service, props.type, props.dataset]);
+	}, [service, props.type, props.analyzeType]);
 
 	useEffect(() => {
 		if (pureData) {
 			setChartData(pureData);
 		}
-	}, [pureData, props.cumulative, props.estimate]);
+	}, [pureData]);
 
 	if (error) {
 		return <StatusBox error={error} />;

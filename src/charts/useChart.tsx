@@ -32,8 +32,7 @@ Chart.register(annotationPlugin);
 
 export type ChartSupportedTypes = "bar" | "line";
 export type ChartOptions = ChartOptionsJS<ChartSupportedTypes>;
-export type CharTooltipItem = TooltipItem<ChartSupportedTypes>;
-//export type ChartDatasets = ChartData<ChartSupportedTypes>;
+export type ChartTooltipItem = TooltipItem<ChartSupportedTypes>;
 export type ChartAnnotation = any;
 
 export type ChartDataset = {

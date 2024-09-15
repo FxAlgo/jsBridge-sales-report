@@ -7,6 +7,7 @@ export enum DataType {
 	New = 0,
 	Upsell = 1,
 	Renewal = 2,
+	Total = 4,
 }
 
 export type ChartData = {
