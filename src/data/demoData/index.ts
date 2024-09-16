@@ -1,5 +1,6 @@
-import { DataTable, DateGroupingType, FetchRecord, FetchRecordSets, recordNumberToDate } from "../fetch";
+import { FetchRecord, FetchRecordSets, recordNumberToDate } from "../fetch";
 import { fetchCosts } from "../fetch/fetchCosts";
+import { DataTable, DateGroupingType } from "../types";
 import { demoInvoices } from "./demoInvoices";
 import { demoOpportunities } from "./demoOpportunities";
 import { demoOrders, demoOrdersM, demoOrdersQ } from "./demoOrders";

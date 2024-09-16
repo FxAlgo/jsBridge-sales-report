@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import { ButtonGroup } from "./buttonGroup";
 import { AnalyzeType, Container } from "./container";
 import { DataProvider } from "./data/dataProvider";
-import { DateGroupingType } from "./data/fetch";
+import { DateGroupingType } from "./data/types";
 import "./sales-report.css";
 
 const root = createRoot(document.getElementById("root") as HTMLElement);
@@ -26,13 +26,13 @@ const App = () => {
 				<ButtonGroup
 					onSelect={onPeriodSelect}
 					buttons={[
-						{ title: "Year", value: "year" },
-						{ title: "Quarter", value: "quarter" },
-						{ title: "Month", value: "month" },
+						{ title: "Y", value: "year" },
+						{ title: "Q", value: "quarter" },
+						{ title: "M", value: "month" },
 					]}
 				/>
 				<ButtonGroup
-					style={{ marginLeft: "1rem" }}
+					style={{ marginLeft: "0.5rem" }}
 					onSelect={(a: string) => setAnalyzeType(a as AnalyzeType)}
 					buttons={[
 						{ title: "Sale", value: "sale" },

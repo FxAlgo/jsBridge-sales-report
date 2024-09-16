@@ -9,7 +9,7 @@ export function addRecordsOperation(
 ): void {
 	const dataSetA = datasets[a];
 	const dataSetB = datasets[b];
-	const result: DataRecordSet = { data: [], name: resultName, actualValues: [], stackDataType: false };
+	const result: DataRecordSet = { data: [], name: resultName, actualValues: undefined, valueNames: undefined };
 
 	if (dataSetA && dataSetB) {
 		const dataA = dataSetA.data;

@@ -1,6 +1,7 @@
+import { DateGroupingType } from "../types";
 import { formatDate } from "./formatDate";
 import { aggregate, attributeGroup } from "./helpers";
-import { DateGroupingType, FetchRecord } from "./types";
+import { FetchRecord } from "./types";
 
 export async function fetchInvoices(from: Date, type: DateGroupingType): Promise<FetchRecord[]> {
 	const entity = new MobileCRM.FetchXml.Entity("invoice");

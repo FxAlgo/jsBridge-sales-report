@@ -1,5 +1,6 @@
-import { DateGroupingType, FetchRecord, FetchRecordSets } from "./fetch";
-import { DataType } from "./types";
+import { dataTypeConfig } from "./dataTypeConfig";
+import { FetchRecord, FetchRecordSets } from "./fetch";
+import { DateGroupingType } from "./types";
 
 export type DataRecord = {
 	date: number; // year*100 + month/quarter
@@ -10,11 +11,23 @@ export type DataRecord = {
 
 type ValueSummary = { value: number; label: string };
 
+enum OrderValueIndex {
+	New = 2,
+	Upsell = 1,
+	Renewal = 0,
+}
+
+enum CostValueIndex {
+	Personal = 0,
+	Office = 1,
+	Other = 2,
+}
+
 export type DataRecordSet = {
 	data: DataRecord[];
 	name: string;
-	actualValues: ValueSummary[];
-	stackDataType: boolean;
+	valueNames?: string[];
+	actualValues?: ValueSummary[];
 };
 
 export type DataRecordSets = Record<string, DataRecordSet>;
@@ -31,18 +44,20 @@ export function convertFetchRecordSets(fetchDataSets: FetchRecordSets, dateType:
 	for (const name in fetchDataSets) {
 		const fetchDataSet = fetchDataSets[name];
 		if (fetchDataSet && fetchDataSet.length > 0) {
-			const records = mapFetchRecords(fetchDataSet, dateType);
+			const config = dataTypeConfig[name];
+			const records = mapFetchRecords(fetchDataSet, dateType, name);
 			const data = consolidateFetchRecord(records);
-			const actualValues = calculateValueSummaries(data, name);
-			const stackDataType = data.length > 0 && data[0].values !== undefined;
-			result[name] = { data, name, actualValues, stackDataType };
+			const actualValues = config.showActualValues === undefined || config.showActualValues ? calculateValueSummaries(data, name) : undefined;
+			const valueNames = config?.valueLabels;
+
+			result[name] = { data, name, valueNames, actualValues };
 		}
 	}
 	return pairByDate(result, dateType);
 }
 
-export function toValues(data: DataRecord[], type?: DataType): number[] {
-	return data.map(v => Math.round(v.values !== undefined ? v.values[type as DataType] : v.total));
+export function toValues(data: DataRecord[], index?: number): number[] {
+	return data.map(v => Math.round(v.values !== undefined ? v.values[index as number] : v.total));
 }
 
 export function toEuro(value: number): string {
@@ -97,16 +112,22 @@ function calculateValueSummaries(data: DataRecord[], name: string): ValueSummary
 		const prevValues = data[data.length - 2];
 
 		actualValues.push(calculateValueSummary(`Actual ${name}s`, currValues.total, prevValues.total));
-		if (currValues.values !== undefined && prevValues.values !== undefined && name === "order") {
-			const currValue = currValues.values[DataType.New] + currValues.values[DataType.Upsell];
-			const prevValue = prevValues.values[DataType.New] + prevValues.values[DataType.Upsell];
-			actualValues.push(calculateValueSummary(`Actual new & upsales`, currValue, prevValue));
+		if (currValues.values !== undefined && prevValues.values !== undefined) {
+			if (name === "order") {
+				const currValue = currValues.values[OrderValueIndex.New] + currValues.values[OrderValueIndex.Upsell];
+				const prevValue = prevValues.values[OrderValueIndex.New] + prevValues.values[OrderValueIndex.Upsell];
+				actualValues.push(calculateValueSummary(`Actual new & upsales`, currValue, prevValue));
+			} else if (name === "cost") {
+				const currValue = currValues.values[CostValueIndex.Personal];
+				const prevValue = prevValues.values[CostValueIndex.Personal];
+				actualValues.push(calculateValueSummary(`Personal costs`, currValue, prevValue));
+			}
 		}
 	}
 	return actualValues;
 }
 
-function mapFetchRecords(data: FetchRecord[], dateType: DateGroupingType): TempRecord[] {
+function mapFetchRecords(data: FetchRecord[], dateType: DateGroupingType, dataName: string): TempRecord[] {
 	const hasType = data && data.length > 0 && data[0].length > 3;
 
 	return data.map(row => {
@@ -115,7 +136,7 @@ function mapFetchRecords(data: FetchRecord[], dateType: DateGroupingType): TempR
 			date: +val[0] * 100 + (val[0] == val[1] ? 0 : +val[1]), // year year fix
 			name: createName(val[0], +val[1], dateType),
 			value: +val[2],
-			type: hasType ? typeToDataType(val[3]) : undefined,
+			type: hasType ? typeToDataType(val[3], dataName) : undefined,
 		};
 	});
 }
@@ -135,7 +156,7 @@ function consolidateFetchRecord(records: TempRecord[]): DataRecord[] {
 		const set = values[date];
 		set.total += value;
 		if (set.values) {
-			set.values[type as DataType] = value;
+			set.values[type as OrderValueIndex] = value;
 		}
 	}
 
@@ -144,22 +165,26 @@ function consolidateFetchRecord(records: TempRecord[]): DataRecord[] {
 		if (set.values === undefined) {
 			break;
 		}
-		set.values[DataType.Renewal] = set.total - (set.values[DataType.New] + set.values[DataType.Upsell]);
+		set.values[OrderValueIndex.Renewal] = set.total - (set.values[OrderValueIndex.New] + set.values[OrderValueIndex.Upsell]);
 	}
 	return arr;
 }
 
-function typeToDataType(type: string): DataType {
-	if (type == "New" || type == "Personal") {
-		return DataType.New;
-	} else if (type == "Upsell" || type == "Office") {
-		return DataType.Upsell;
-	} else if (type == "Renewal" || type == null || type == "Others") {
-		return DataType.Renewal;
-	} else if (type == "Total") {
-		return DataType.Total;
+function typeToDataType(type: string, dataName: string): OrderValueIndex {
+	const transformer = dataTypeConfig[dataName].valueIndexTransformer;
+	if (transformer) {
+		return transformer[type] ?? transformer["default"];
 	}
-	return -1 as DataType;
+	//	if (type == "New" || type == "Personal") {
+	//		return DataType.New;
+	//	} else if (type == "Upsell" || type == "Office") {
+	//		return DataType.Upsell;
+	//	} else if (type == "Renewal" || type == null || type == "Others") {
+	//		return DataType.Renewal;
+	//	} else if (type == "Total") {
+	//		return DataType.Total;
+	//	}
+	return -1 as OrderValueIndex;
 }
 
 const months: string[] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -179,5 +204,5 @@ type TempRecord = {
 	date: number;
 	name: string;
 	value: number;
-	type: DataType | undefined;
+	type: OrderValueIndex | undefined;
 };

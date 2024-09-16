@@ -1,14 +1,15 @@
-import { baseColors, Color, rgbaColor, rgbColor } from "../charts/colors";
+import { Color, rgbaColor, rgbColor } from "../charts/colors";
 import { ChartDataset, ChartOptions, ChartTooltipItem } from "../charts/useChart";
 import { addEstimates } from "./calculations/estimates";
-import { addRecordsOperation } from "./calculations/opperations";
+import { addRecordsOperation } from "./calculations/operations";
 import { convertFetchRecordSets, DataRecordSet, DataRecordSets, toEuro, toValues } from "./convertFetchRecords";
+import { dataTypeConfig } from "./dataTypeConfig";
 import { demoData } from "./demoData";
-import { aggregatedFetch, DataTable, DateGroupingType, FetchRecordSets, summaryFetch } from "./fetch";
-import { ChartData, DataType } from "./types";
+import { aggregatedFetch, FetchRecordSets, summaryFetch } from "./fetch";
+import { ChartData, DataTable, DateGroupingType } from "./types";
 
 export async function prepareIncomeChart(type: DateGroupingType): Promise<ChartData | undefined> {
-	const datasets: DataTable[] = ["order", "invoice"];
+	const datasets: DataTable[] = ["order", "invoice", "opportunity"];
 	let data: FetchRecordSets;
 	if (process.env["NODE_ENV"] === "development") {
 		data = demoData(datasets, type);
@@ -17,7 +18,7 @@ export async function prepareIncomeChart(type: DateGroupingType): Promise<ChartD
 	}
 
 	const records = convertFetchRecordSets(data, type);
-	addEstimates(records, type, 2);
+	addEstimates(records, type, 1);
 	return toSalesChartDatasets(records);
 }
 
@@ -33,7 +34,7 @@ export async function prepareIncomeExpensesChart(type: DateGroupingType): Promis
 
 	const records = convertFetchRecordSets(data, type);
 	addRecordsOperation(records, "invoice", "cost", "profit", (a: number, b: number) => a + b);
-	addEstimates(records, type, 2);
+	addEstimates(records, type, 1);
 	return toIncomeExpensesChartDatasets(records);
 }
 
@@ -76,40 +77,29 @@ function toIncomeExpensesChartDatasets(dataRecordSets: DataRecordSets): ChartDat
 	return { datasets: { datasets: charDatasets, labels: labels as string[] }, options };
 }
 
-const colorMap: Record<string, Color> = {
-	order: baseColors[0],
-	invoice: baseColors[1],
-	cost: baseColors[2],
-	profit: baseColors[4],
-};
+function addToDatasets(datasets: ChartDataset[], { data, name, valueNames }: DataRecordSet, stack?: string): void {
+	const color = dataTypeConfig[name].color;
+	if (valueNames && valueNames.length > 0) {
+		const valueColors = dataTypeConfig[name].valueColors;
+		for (let i = 0; i < valueNames.length; i++) {
+			let backgroundColor = rgbaColor(color, 1 - i * 0.25);
 
-function addToDatasets(datasets: ChartDataset[], { data, name, stackDataType }: DataRecordSet, stack?: string): void {
-	const color = colorMap[name];
-	if (stackDataType) {
-		datasets.push({
-			type: "bar",
-			stack,
-			label: `New ${name}s`,
-			data: toValues(data, DataType.New),
-			backgroundColor: rgbColor(color),
-			borderWidth: 1,
-		});
-		datasets.push({
-			type: "bar",
-			stack,
-			label: "Upsells",
-			data: toValues(data, DataType.Upsell),
-			backgroundColor: rgbaColor(color, 0.7),
-			borderWidth: 1,
-		});
-		datasets.push({
-			type: "bar",
-			stack,
-			label: "Renewals",
-			data: toValues(data, DataType.Renewal),
-			backgroundColor: rgbaColor(color, 0.5),
-			borderWidth: 1,
-		});
+			if (valueColors !== undefined) {
+				if (valueColors[i] instanceof Array) {
+					backgroundColor = rgbColor(valueColors[i] as Color);
+				} else {
+					backgroundColor = valueColors[i] as string;
+				}
+			}
+			datasets.push({
+				type: "bar",
+				stack,
+				label: valueNames[i],
+				data: toValues(data, i),
+				backgroundColor,
+				borderWidth: 1,
+			});
+		}
 	} else {
 		const label = `${capitalize(name)}s`;
 		if (name === "profit") {
@@ -200,10 +190,12 @@ function annotation(value: number, borderColor: string, content: string): object
 		value,
 		borderColor,
 		borderWidth: 1,
+		borderDash: [1, 1],
 		label: {
+			position: "start",
 			display: true,
-			backgroundColor: rgbaColor([90, 90, 90], 0.5),
-			borderRadius: 5,
+			backgroundColor: rgbaColor([90, 90, 90], 0.6),
+			borderRadius: 3,
 			content,
 			rotation: "auto",
 		},
@@ -222,11 +214,13 @@ function addAnnotations(options: ChartOptions, dataSet: DataRecordSet): void {
 		};
 	}
 
-	if (dataSet.actualValues.length > 0) {
+	if (dataSet.actualValues && dataSet.actualValues.length > 0) {
 		const annotations = options.plugins.annotation.annotations as any[];
+		let isMain = true;
 
 		for (const { value, label } of dataSet.actualValues) {
-			annotations.push(annotation(value, "gray", label));
+			annotations.push(annotation(value, isMain ? "black" : "gray", label));
+			isMain = false;
 		}
 	}
 }

@@ -1,29 +1,24 @@
+import { DateGroupingType } from "../types";
 import { formatDate } from "./formatDate";
 import { aggregate, attributeGroup, groupBy } from "./helpers";
-import { DateGroupingType, FetchRecord } from "./types";
+import { FetchRecord } from "./types";
 
-export async function fetchOpportunities(from: Date, type: DateGroupingType): Promise<FetchRecord[]> {
+export async function fetchOpportunities(from: Date, type: DateGroupingType, renewals: boolean): Promise<FetchRecord[]> {
 	const entity = new MobileCRM.FetchXml.Entity("opportunity");
-
-	//const link = entity.addLink("salesorder", "salesorderid", "salesorderid", "inner");
-	//link.alias = "L0";
 
 	entity.attributes.push(
 		attributeGroup("createdon", "year", "Year"),
 		attributeGroup("createdon", type, "Date"),
+		aggregate("estimatedvalue_base", "sum", "Estimated"),
 		groupBy("statecode", "StateCode"),
-		aggregate("actualvalue", "sum", "ValueA"),
-		aggregate("actualvalue_base", "sum", "ValueB"),
-
-		//aggregate("estimatedvalue_base", "sum", "EstimatedA"),
-		//aggregate("m000_estimatecalc_base", "sum", "EstimatedB"),
-		//aggregate("m000_estimatecalc", "sum", "Estimated3"),
-		// closeprobability
 	);
 
-	entity.filter = new MobileCRM.FetchXml.Filter();
-	entity.filter.where("createdon", "on-or-after", formatDate(from));
-	entity.filter.where("statecode", "ne", 2); // 2 = Lost
+	const filter1 = new MobileCRM.FetchXml.Filter();
+	filter1.where("createdon", "on-or-after", formatDate(from));
+	//entity.filter.where("statecode", "ne", 2); // 2 = Lost
+
+	entity.filter = new MobileCRM.FetchXml.Filter("and");
+	entity.filter.filters.push(filter1, addRenewalTeamFilter(renewals));
 
 	entity.orderBy("Year", false);
 	entity.orderBy("Date", false);
@@ -32,3 +27,20 @@ export async function fetchOpportunities(from: Date, type: DateGroupingType): Pr
 	fetch.aggregate = true;
 	return await fetch.executeAsync("Array");
 }
+
+function addRenewalTeamFilter(renewals: boolean): MobileCRM.FetchXml.Filter {
+	const opp = renewals ? "eq" : "ne";
+	const filter = new MobileCRM.FetchXml.Filter(renewals ? "or" : "and");
+
+	for (const id in renewalTeam) {
+		const condition = filter.where("ownerid", opp, id);
+		condition.uitype = "systemuser";
+		condition.uiname = renewalTeam[id];
+	}
+	return filter;
+}
+
+const renewalTeam: { [key: string]: string } = {
+	"8f14bf62-1fff-e011-8a90-001e0bddb9a9": "Adrian Kocak",
+	"75956f75-1837-e811-ab77-00155d0b1304": "Alexander Timko",
+};

@@ -2,17 +2,13 @@ import { useEffect, useState } from "react";
 import { Chart } from "../charts";
 import { useDataService } from "../data/dataProvider";
 import { prepareIncomeChart, prepareIncomeExpensesChart } from "../data/dataSets";
-import { DateGroupingType } from "../data/fetch";
-import { ChartData } from "../data/types";
+import { ChartData, DateGroupingType } from "../data/types";
 import { StatusBox } from "./statusBox";
 
 export type AnalyzeType = "sale" | "profit";
 type Props = {
 	type: DateGroupingType;
 	analyzeType: AnalyzeType;
-	//dataset: DataTable;
-	//cumulative?: boolean;
-	//estimate?: boolean;
 };
 
 export const Container = (props: Props) => {
@@ -31,6 +27,7 @@ export const Container = (props: Props) => {
 
 				//const pureData = await aggregatedFetch(["opportunity"], props.type);
 				//setError(JSON.stringify(pureData) + "\n\n\n\n\n\n\n");
+				//return;
 
 				if (props.analyzeType === "sale") {
 					setPureData(await prepareIncomeChart(type));

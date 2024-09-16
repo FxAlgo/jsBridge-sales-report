@@ -1,5 +1,5 @@
 import "@resconet/jsbridge";
-import { DateGroupingType } from "./types";
+import { DateGroupingType } from "../types";
 
 export function attributeGroup(name: string, dategrouping: DateGroupingType, alias?: string): MobileCRM.FetchXml.Attribute {
 	const attr = new MobileCRM.FetchXml.Attribute(name);

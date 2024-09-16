@@ -1,6 +1,5 @@
 import { DataRecord, DataRecordSets, toDate } from "../convertFetchRecords";
-import { DateGroupingType } from "../fetch";
-import { DataType, DayInMilliseconds } from "../types";
+import { DateGroupingType, DayInMilliseconds } from "../types";
 
 export function addEstimates(dataRecordSets: DataRecordSets, type: DateGroupingType, yearNumber: number = 2): void {
 	for (const dataTable in dataRecordSets) {
@@ -96,21 +95,21 @@ function estimateNextYear(rec: DataRecord[]): void {
 	const item: DataRecord = {
 		date: (year + 1) * 100,
 		name: `${year + 1} Est.`,
-		total: calculateCAGR(rec, undefined, usePastYear),
+		total: calculateCAGR(rec, -1, usePastYear),
 		values: undefined,
 	};
 
 	if (last.values !== undefined) {
-		item.values = [
-			calculateCAGR(rec, DataType.New, usePastYear),
-			calculateCAGR(rec, DataType.Upsell, usePastYear),
-			calculateCAGR(rec, DataType.Renewal, usePastYear),
-		];
+		const len = last.values.length;
+		item.values = [];
+		for (let idx = 0; idx < last.values.length; idx++) {
+			item.values.push(calculateCAGR(rec, idx, usePastYear));
+		}
 	}
 	rec.push(item);
 }
 
-function calculateCAGR(rec: DataRecord[], type: DataType | undefined, years: number = 2): number {
+function calculateCAGR(rec: DataRecord[], idx: number, years: number = 2): number {
 	const len = rec.length;
 	const lastIdx = len - 1;
 
@@ -124,8 +123,8 @@ function calculateCAGR(rec: DataRecord[], type: DataType | undefined, years: num
 	const startRec = rec[lastIdx];
 	const endRec = rec[lastIdx - years];
 
-	const startValue = startRec.values !== undefined ? startRec.values[type as DataType] : startRec.total;
-	const endValue = endRec.values !== undefined ? endRec.values[type as DataType] : endRec.total;
+	const startValue = startRec.values === undefined || idx < 0 ? startRec.total : startRec.values[idx];
+	const endValue = endRec.values === undefined || idx < 0 ? endRec.total : endRec.values[idx];
 	const cagr = Math.pow(startValue / endValue, 1 / years) - 1;
 	return startValue * (1 + cagr);
 }

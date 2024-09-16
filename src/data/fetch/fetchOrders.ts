@@ -1,6 +1,7 @@
+import { DateGroupingType } from "../types";
 import { formatDate } from "./formatDate";
 import { aggregate, attributeGroup, groupBy } from "./helpers";
-import { DateGroupingType, FetchRecord } from "./types";
+import { FetchRecord } from "./types";
 
 type DateType = "m000_orderdate" | "createdon";
 
