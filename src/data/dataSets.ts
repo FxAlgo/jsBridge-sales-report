@@ -4,38 +4,33 @@ import { addEstimates } from "./calculations/estimates";
 import { addRecordsOperation } from "./calculations/operations";
 import { convertFetchRecordSets, DataRecordSet, DataRecordSets, toEuro, toValues } from "./convertFetchRecords";
 import { dataTypeConfig } from "./dataTypeConfig";
-import { demoData } from "./demoData";
-import { aggregatedFetch, FetchRecordSets, summaryFetch } from "./fetch";
+import { summaryFetch } from "./fetch";
+import { getData } from "./getData";
 import { ChartData, DataTable, DateGroupingType } from "./types";
 
 export async function prepareIncomeChart(type: DateGroupingType): Promise<ChartData | undefined> {
 	const datasets: DataTable[] = ["order", "invoice", "opportunity"];
-	let data: FetchRecordSets;
-	if (process.env["NODE_ENV"] === "development") {
-		data = demoData(datasets, type);
-	} else {
-		data = await aggregatedFetch(datasets, type);
-	}
+	const data = await getData(datasets, type);
 
-	const records = convertFetchRecordSets(data, type);
-	addEstimates(records, type, 1);
-	return toSalesChartDatasets(records);
+	if (data) {
+		const records = convertFetchRecordSets(data, type);
+		addEstimates(records, type, 1);
+		return toSalesChartDatasets(records);
+	}
+	return undefined;
 }
 
 export async function prepareIncomeExpensesChart(type: DateGroupingType): Promise<ChartData | undefined> {
 	const datasets: DataTable[] = ["invoice", "cost"];
-	let data: FetchRecordSets;
+	const data = await getData(datasets, type);
 
-	if (process.env["NODE_ENV"] === "development") {
-		data = demoData(datasets, type);
-	} else {
-		data = await aggregatedFetch(datasets, type);
+	if (data) {
+		const records = convertFetchRecordSets(data, type);
+		addRecordsOperation(records, "invoice", "cost", "profit", (a: number, b: number) => a + b);
+		addEstimates(records, type, 1);
+		return toIncomeExpensesChartDatasets(records);
 	}
-
-	const records = convertFetchRecordSets(data, type);
-	addRecordsOperation(records, "invoice", "cost", "profit", (a: number, b: number) => a + b);
-	addEstimates(records, type, 1);
-	return toIncomeExpensesChartDatasets(records);
+	return undefined;
 }
 
 export async function fetchSummary(dataset: DataTable): Promise<string> {

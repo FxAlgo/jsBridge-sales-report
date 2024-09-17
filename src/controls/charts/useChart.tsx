@@ -1,5 +1,5 @@
-import Chart, { Chart as ChartJS, ChartOptions as ChartOptionsJS, TooltipItem } from "chart.js/auto";
-import annotationPlugin from "chartjs-plugin-annotation";
+import /* webpackChunkName: "[chart]" */ Chart, { Chart as ChartJS, ChartOptions as ChartOptionsJS, TooltipItem } from "chart.js/auto";
+import /* webpackChunkName: "[chart]" */ annotationPlugin from "chartjs-plugin-annotation";
 import { useCallback, useRef } from "react";
 //import { ChartDatasets } from "../data/types";
 /*

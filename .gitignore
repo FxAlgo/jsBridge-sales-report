@@ -9,6 +9,9 @@
 # dependencies
 /node_modules
 
+# development
+/src/data/demoData/*
+
 # IDEs and editors
 /.idea
 .project

@@ -2,9 +2,13 @@ import CssMinimizerPlugin from "css-minimizer-webpack-plugin";
 import HtmlWebpackPlugin from "html-webpack-plugin";
 import MiniCssExtractPlugin from "mini-css-extract-plugin";
 import path from "path";
+import TerserPlugin from "terser-webpack-plugin";
+import { NormalModuleReplacementPlugin } from "webpack";
 
 const getConfig = (env: { [key: string]: string }, argv: { [key: string]: string }): any => {
-	const baseConfig = argv["mode"] === "production" ? productionConfig : debugConfig;
+	const isProduction = argv["mode"] === "production";
+	const baseConfig = isProduction ? productionConfig : debugConfig;
+
 	return {
 		...baseConfig,
 		context: path.resolve(__dirname, "src"),
@@ -15,6 +19,9 @@ const getConfig = (env: { [key: string]: string }, argv: { [key: string]: string
 					test: /\.(ts|tsx)?$/,
 					use: "ts-loader",
 					exclude: /node_modules/,
+					//options: {
+					//	webpackChunkName: "lazy-loaded-chunk",
+					//},
 				},
 				{
 					test: /\.css$/,
@@ -22,11 +29,15 @@ const getConfig = (env: { [key: string]: string }, argv: { [key: string]: string
 				},
 			],
 		},
+		performance: {
+			hints: false,
+		},
 		resolve: {
 			extensions: [".tsx", ".ts", ".js"],
 		},
 		output: {
 			filename: "sales-report.js",
+			//chunkFilename: "[name].js",
 			path: path.resolve(__dirname, "dist"),
 		},
 		plugins: [
@@ -38,6 +49,15 @@ const getConfig = (env: { [key: string]: string }, argv: { [key: string]: string
 			new MiniCssExtractPlugin({
 				filename: "./sales-report.css",
 			}),
+			new NormalModuleReplacementPlugin(/\.[\\/]getData/, resource => {
+				//console.log("Replacing getData.ts", resource);
+				if (!isProduction) {
+					resource.request = resource.request.replace(/getData/, "demoData/getData");
+				}
+			}),
+			//new DefinePlugin({
+			//	__DEV: JSON.stringify(development),
+			//}),
 		],
 	};
 };
@@ -55,7 +75,8 @@ const debugConfig = {
 const productionConfig = {
 	mode: "production",
 	optimization: {
-		minimizer: [new CssMinimizerPlugin()],
+		minimize: true,
+		minimizer: [new CssMinimizerPlugin(), new TerserPlugin()],
 	},
 };
 

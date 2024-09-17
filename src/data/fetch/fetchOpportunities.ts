@@ -1,9 +1,14 @@
-import { DateGroupingType } from "../types";
+import { DateGroupingType, SecondaryGroupingType } from "../types";
 import { formatDate } from "./formatDate";
 import { aggregate, attributeGroup, groupBy } from "./helpers";
 import { FetchRecord } from "./types";
 
-export async function fetchOpportunities(from: Date, type: DateGroupingType, renewals: boolean): Promise<FetchRecord[]> {
+export async function fetchOpportunities(
+	from: Date,
+	type: DateGroupingType,
+	secondary: SecondaryGroupingType,
+	renewals: boolean,
+): Promise<FetchRecord[]> {
 	const entity = new MobileCRM.FetchXml.Entity("opportunity");
 
 	entity.attributes.push(
@@ -13,9 +18,12 @@ export async function fetchOpportunities(from: Date, type: DateGroupingType, ren
 		groupBy("statecode", "StateCode"),
 	);
 
+	if (secondary === SecondaryGroupingType.PerOwner) {
+		entity.attributes.push(groupBy("owninguser", "Owner"));
+	}
+
 	const filter1 = new MobileCRM.FetchXml.Filter();
 	filter1.where("createdon", "on-or-after", formatDate(from));
-	//entity.filter.where("statecode", "ne", 2); // 2 = Lost
 
 	entity.filter = new MobileCRM.FetchXml.Filter("and");
 	entity.filter.filters.push(filter1, addRenewalTeamFilter(renewals));

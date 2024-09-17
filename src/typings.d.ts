@@ -12,3 +12,5 @@ declare module "*.gif" {
 	const content: string;
 	export default content;
 }
+
+declare var __DEV: boolean;

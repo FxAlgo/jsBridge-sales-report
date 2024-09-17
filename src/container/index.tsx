@@ -2,13 +2,15 @@ import { useEffect, useState } from "react";
 import { Chart } from "../controls/charts";
 import { useDataService } from "../data/dataProvider";
 import { prepareIncomeChart, prepareIncomeExpensesChart } from "../data/dataSets";
-import { ChartData, DateGroupingType } from "../data/types";
+import { aggregatedFetch } from "../data/fetch";
+import { ChartData, DateGroupingType, SecondaryGroupingType } from "../data/types";
 import { StatusBox } from "./statusBox";
 
 export type AnalyzeType = "sale" | "profit";
 type Props = {
 	type: DateGroupingType;
 	analyzeType: AnalyzeType;
+	testFetch?: boolean;
 };
 
 export const Container = (props: Props) => {
@@ -25,9 +27,11 @@ export const Container = (props: Props) => {
 					throw new Error("Invalid date grouping type");
 				}
 
-				//const pureData = await aggregatedFetch(["opportunity"], props.type);
-				//setError(JSON.stringify(pureData) + "\n\n\n\n\n\n\n");
-				//return;
+				if (props.testFetch) {
+					const pureData = await aggregatedFetch(["opportunity"], props.type, SecondaryGroupingType.PerOwner);
+					setError(JSON.stringify(pureData) + "\n\n\n\n\n\n\n");
+					return;
+				}
 
 				if (props.analyzeType === "sale") {
 					setPureData(await prepareIncomeChart(type));
