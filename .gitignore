@@ -10,7 +10,7 @@
 /node_modules
 
 # development
-/src/data/demoData/*
+/src/demoData
 
 # IDEs and editors
 /.idea

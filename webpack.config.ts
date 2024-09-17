@@ -52,7 +52,7 @@ const getConfig = (env: { [key: string]: string }, argv: { [key: string]: string
 			new NormalModuleReplacementPlugin(/\.[\\/]getData/, resource => {
 				//console.log("Replacing getData.ts", resource);
 				if (!isProduction) {
-					resource.request = resource.request.replace(/getData/, "demoData/getData");
+					resource.request = resource.request.replace(/getData/, "../demoData");
 				}
 			}),
 			//new DefinePlugin({
