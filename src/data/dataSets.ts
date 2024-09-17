@@ -1,5 +1,5 @@
-import { Color, rgbaColor, rgbColor } from "../charts/colors";
-import { ChartDataset, ChartOptions, ChartTooltipItem } from "../charts/useChart";
+import { Color, rgbaColor, rgbColor } from "../controls/charts/colors";
+import { ChartDataset, ChartOptions, ChartTooltipItem } from "../controls/charts/useChart";
 import { addEstimates } from "./calculations/estimates";
 import { addRecordsOperation } from "./calculations/operations";
 import { convertFetchRecordSets, DataRecordSet, DataRecordSets, toEuro, toValues } from "./convertFetchRecords";

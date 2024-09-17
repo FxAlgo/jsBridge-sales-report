@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Chart } from "../charts";
+import { Chart } from "../controls/charts";
 import { useDataService } from "../data/dataProvider";
 import { prepareIncomeChart, prepareIncomeExpensesChart } from "../data/dataSets";
 import { ChartData, DateGroupingType } from "../data/types";

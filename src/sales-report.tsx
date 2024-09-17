@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
-import { ButtonGroup } from "./buttonGroup";
+import { ButtonGroup } from "./controls/buttonGroup";
 import { AnalyzeType, Container } from "./container";
 import { DataProvider } from "./data/dataProvider";
 import { DateGroupingType } from "./data/types";

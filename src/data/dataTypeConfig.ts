@@ -1,4 +1,4 @@
-import { baseColors, Color, rgbaColor, rgbColor } from "../charts/colors";
+import { baseColors, Color, rgbaColor, rgbColor } from "../controls/charts/colors";
 
 export type DataTypeConfig = {
 	color: Color;
