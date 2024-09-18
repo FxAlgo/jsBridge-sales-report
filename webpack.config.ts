@@ -49,7 +49,7 @@ const getConfig = (env: { [key: string]: string }, argv: { [key: string]: string
 			new MiniCssExtractPlugin({
 				filename: "./sales-report.css",
 			}),
-			new NormalModuleReplacementPlugin(/\.[\\/]getData/, resource => {
+			new NormalModuleReplacementPlugin(/\.\.[\\/]getData/, resource => {
 				//console.log("Replacing getData.ts", resource);
 				if (!isProduction) {
 					resource.request = resource.request.replace(/getData/, "../demoData");

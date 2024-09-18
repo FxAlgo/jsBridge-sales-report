@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { Chart } from "../../controls/charts";
-import { useDataService } from "../../data/dataProvider";
-import { prepareIncomeChart, prepareIncomeExpensesChart } from "../../data/dataSets";
 import { aggregatedFetch } from "../../data/fetch";
 import { ChartData, DateGroupingType, SecondaryGroupingType } from "../../data/types";
+import { useDataService } from "../dataProvider";
 import { StatusBox } from "../statusBox";
+import { prepareIncomeChart, prepareIncomeExpensesChart } from "./dataSets";
 
 export type ChartType = "sale" | "profit";
 

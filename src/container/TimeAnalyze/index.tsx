@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ButtonGroup } from "../../controls/buttonGroup";
-import { DataProvider } from "../../data/dataProvider";
 import { DateGroupingType } from "../../data/types";
+import { DataProvider } from "../dataProvider";
 import { ChartType, TimeBarCharts } from "./chart";
 
 type Props = {

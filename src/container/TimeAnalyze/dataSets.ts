@@ -1,11 +1,11 @@
-import { Color, rgbaColor, rgbColor } from "../controls/charts/colors";
-import { ChartDataset, ChartOptions, ChartTooltipItem } from "../controls/charts/useChart";
-import { addEstimates } from "./calculations/estimates";
-import { addRecordsOperation } from "./calculations/operations";
-import { convertFetchRecordSets, DataRecordSet, DataRecordSets, toEuro, toValues } from "./convertFetchRecords";
-import { dataTypeConfig } from "./dataTypeConfig";
-import { getData } from "./getData";
-import { ChartData, DataTable, DateGroupingType } from "./types";
+import { Color, rgbaColor, rgbColor } from "../../controls/charts/colors";
+import { ChartDataset, ChartOptions, ChartTooltipItem } from "../../controls/charts/useChart";
+import { addEstimates } from "../../data/calculations/estimates";
+import { addRecordsOperation } from "../../data/calculations/operations";
+import { convertFetchRecordSets, DataRecordSet, DataRecordSets, toEuro, toValues } from "../../data/convertFetchRecords";
+import { dataTypeConfig } from "../../data/dataTypeConfig";
+import { ChartData, DataTable, DateGroupingType } from "../../data/types";
+import { getData } from "../getData";
 
 export async function prepareIncomeChart(type: DateGroupingType): Promise<ChartData | undefined> {
 	const datasets: DataTable[] = ["order", "invoice", "opportunity"];
