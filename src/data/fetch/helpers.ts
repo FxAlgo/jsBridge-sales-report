@@ -10,7 +10,7 @@ export async function executeFetch(fetch: MobileCRM.FetchXml.Fetch, dateGrouping
 type CreateNameProc = (year: string, date: number) => string;
 
 export function convertFetchRecord(data: FetchRecord[], dateGrouping: DateGroupingType): FetchTimeRecord[] {
-	const createName = getCreateNameProc(dateGrouping);
+	const createName = getTimeRecordNameProc(dateGrouping);
 	const columns = data && data.length > 0 ? data[0].length : 0;
 
 	return (data as string[][]).map((val: string[]) => ({
@@ -24,7 +24,7 @@ export function convertFetchRecord(data: FetchRecord[], dateGrouping: DateGroupi
 
 const months: string[] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-function getCreateNameProc(type: DateGroupingType): CreateNameProc {
+export function getTimeRecordNameProc(type: DateGroupingType): CreateNameProc {
 	if (type == "year") {
 		return (year: string) => year;
 	} else if (type == "quarter") {

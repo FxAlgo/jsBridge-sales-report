@@ -1,5 +1,6 @@
 import { ColumnValueTransformer, dataTypeConfig } from "./dataTypeConfig";
 import { FetchTimeRecord, FetchTimeRecordSets } from "./fetch";
+import { getTimeRecordNameProc } from "./fetch/helpers";
 import { DateGroupingType } from "./types";
 
 export type DataRecord = {
@@ -45,7 +46,7 @@ export function convertFetchRecordSets(fetchDataSets: FetchTimeRecordSets, dateT
 		const fetchDataSet = fetchDataSets[name];
 		if (fetchDataSet && fetchDataSet.length > 0) {
 			const config = dataTypeConfig[name];
-			const records = mapFetchRecords(fetchDataSet, dateType, name);
+			const records = mapFetchRecords(fetchDataSet, name);
 			const data = consolidateFetchRecord(records);
 			const actualValues = config.showActualValues === undefined || config.showActualValues ? calculateValueSummaries(data, name) : undefined;
 			const valueNames = config?.valueLabels;
@@ -68,6 +69,7 @@ export function toEuro(value: number): string {
 function pairByDate(dataSets: DataRecordSets, dateType: DateGroupingType): DataRecordSets {
 	const dates = uniqueDates(dataSets);
 	const dateArr = Object.values(dates).sort((a: number, b: number) => a - b);
+	const createName = getTimeRecordNameProc(dateType);
 
 	for (const key in dataSets) {
 		const data = dataSets[key].data;
@@ -77,7 +79,7 @@ function pairByDate(dataSets: DataRecordSets, dateType: DateGroupingType): DataR
 			if (data.length <= idx || data[idx].date !== date) {
 				const year = Math.floor(date / 100);
 				const month = date % 100;
-				const name = createName(year.toString(), month, dateType);
+				const name = createName(year.toString(), month);
 				data.splice(idx, 0, { date, name, total: 0, values: undefined });
 			}
 		}
@@ -127,33 +129,31 @@ function calculateValueSummaries(data: DataRecord[], name: string): ValueSummary
 	return actualValues;
 }
 
-function mapFetchRecords(data: FetchTimeRecord[], dateType: DateGroupingType, dataName: string): TempRecord[] {
+function mapFetchRecords(data: FetchTimeRecord[], dataName: string): TempRecord[] {
 	const transformer = dataTypeConfig[dataName].valueIndexTransformer;
 
-	return data.map(({ date, name, value, type }: FetchTimeRecord) => ({
-		date,
-		name,
-		value,
-		type: transformer && type !== undefined ? transformColumnValue(type, transformer[3]) : undefined,
+	return data.map((row: FetchTimeRecord) => ({
+		...row,
+		typeIndex: transformer && row.type !== undefined ? transformColumnValue(row.type, transformer[3]) : undefined,
 	}));
 }
 
 function consolidateFetchRecord(records: TempRecord[]): DataRecord[] {
 	const values: Record<number, DataRecord> = {};
 
-	for (const { date, name, value, type } of records) {
+	for (const { date, name, value, typeIndex } of records) {
 		if (values[date] === undefined) {
 			values[date] = {
 				date,
 				name,
 				total: 0,
-				values: type !== undefined ? new Array(3).fill(0) : undefined,
+				values: typeIndex !== undefined ? new Array(3).fill(0) : undefined,
 			};
 		}
 		const set = values[date];
 		set.total += value;
 		if (set.values) {
-			set.values[type as OrderValueIndex] = value;
+			set.values[typeIndex as OrderValueIndex] = value;
 		}
 	}
 
@@ -178,22 +178,6 @@ function transformColumnValue(type: string, transformer: ColumnValueTransformer 
 	return -1 as OrderValueIndex;
 }
 
-const months: string[] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-function createName(year: string, date: number, type: DateGroupingType): string {
-	if (type == "year") {
-		return year;
-	} else if (type == "quarter") {
-		return `${year} Q${date}`;
-	} else {
-		const month = months[date - 1];
-		return date === 1 ? `${month}-${year.substring(2)}` : month;
-	}
-}
-
-type TempRecord = {
-	date: number;
-	name: string;
-	value: number;
-	type: OrderValueIndex | undefined;
+type TempRecord = FetchTimeRecord & {
+	typeIndex: OrderValueIndex | undefined;
 };
