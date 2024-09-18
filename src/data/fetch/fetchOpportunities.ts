@@ -1,14 +1,14 @@
 import { DateGroupingType, SecondaryGroupingType } from "../types";
 import { formatDate } from "./formatDate";
-import { aggregate, attributeGroup, groupBy } from "./helpers";
-import { FetchRecord } from "./types";
+import { aggregate, attributeGroup, executeFetch, groupBy } from "./helpers";
+import { FetchTimeRecord } from "./types";
 
 export async function fetchOpportunities(
 	from: Date,
 	type: DateGroupingType,
 	secondary: SecondaryGroupingType,
 	renewals: boolean,
-): Promise<FetchRecord[]> {
+): Promise<FetchTimeRecord[]> {
 	const entity = new MobileCRM.FetchXml.Entity("opportunity");
 
 	entity.attributes.push(
@@ -33,7 +33,7 @@ export async function fetchOpportunities(
 
 	const fetch = new MobileCRM.FetchXml.Fetch(entity);
 	fetch.aggregate = true;
-	return await fetch.executeAsync("Array");
+	return await executeFetch(fetch, type);
 }
 
 function addRenewalTeamFilter(renewals: boolean): MobileCRM.FetchXml.Filter {

@@ -1,5 +1,5 @@
 import { ColumnValueTransformer, dataTypeConfig } from "./dataTypeConfig";
-import { FetchRecord, FetchRecordSets } from "./fetch";
+import { FetchTimeRecord, FetchTimeRecordSets } from "./fetch";
 import { DateGroupingType } from "./types";
 
 export type DataRecord = {
@@ -38,7 +38,7 @@ export function toDate(rec: DataRecord): { year: number; month: number } {
 	return { year, month };
 }
 
-export function convertFetchRecordSets(fetchDataSets: FetchRecordSets, dateType: DateGroupingType): DataRecordSets {
+export function convertFetchRecordSets(fetchDataSets: FetchTimeRecordSets, dateType: DateGroupingType): DataRecordSets {
 	const result: DataRecordSets = {};
 
 	for (const name in fetchDataSets) {
@@ -127,19 +127,15 @@ function calculateValueSummaries(data: DataRecord[], name: string): ValueSummary
 	return actualValues;
 }
 
-function mapFetchRecords(data: FetchRecord[], dateType: DateGroupingType, dataName: string): TempRecord[] {
+function mapFetchRecords(data: FetchTimeRecord[], dateType: DateGroupingType, dataName: string): TempRecord[] {
 	const transformer = dataTypeConfig[dataName].valueIndexTransformer;
-	const hasType = transformer && data && data.length > 0 && data[0].length > 3;
 
-	return data.map(row => {
-		const val = row as string[];
-		return {
-			date: +val[0] * 100 + (val[0] == val[1] ? 0 : +val[1]), // year year fix
-			name: createName(val[0], +val[1], dateType),
-			value: +val[2],
-			type: hasType ? transformColumnValue(val[3], transformer[3]) : undefined,
-		};
-	});
+	return data.map(({ date, name, value, type }: FetchTimeRecord) => ({
+		date,
+		name,
+		value,
+		type: transformer && type !== undefined ? transformColumnValue(type, transformer[3]) : undefined,
+	}));
 }
 
 function consolidateFetchRecord(records: TempRecord[]): DataRecord[] {
@@ -171,7 +167,7 @@ function consolidateFetchRecord(records: TempRecord[]): DataRecord[] {
 	return arr;
 }
 
-function transformColumnValue(type: string, transformer: ColumnValueTransformer): OrderValueIndex {
+function transformColumnValue(type: string, transformer: ColumnValueTransformer | undefined): OrderValueIndex {
 	if (transformer instanceof Object) {
 		const t = transformer as Record<string, number>;
 		return t[type] ?? t["default"];

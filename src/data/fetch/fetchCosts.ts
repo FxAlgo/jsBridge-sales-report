@@ -1,7 +1,8 @@
 import { DateGroupingType } from "../types";
-import { FetchRecord } from "./types";
+import { convertFetchRecord } from "./helpers";
+import { FetchRecord, FetchTimeRecord } from "./types";
 
-export function fetchCosts(type: DateGroupingType): FetchRecord[] {
+export function fetchCosts(type: DateGroupingType): FetchTimeRecord[] {
 	if (type === "month") {
 		const result: FetchRecord[] = [];
 		for (const cost of costs) {
@@ -9,16 +10,17 @@ export function fetchCosts(type: DateGroupingType): FetchRecord[] {
 				result.push([cost[0], m, (cost[2] as number) / 12, cost[3]]);
 			}
 		}
-		return result;
+		return convertFetchRecord(result, type);
 	} else if (type === "quarter") {
-		return costs.flatMap(cost => [
+		const result = costs.flatMap(cost => [
 			[cost[0], 1, (cost[2] as number) / 4, cost[3]],
 			[cost[0], 2, (cost[2] as number) / 4, cost[3]],
 			[cost[0], 3, (cost[2] as number) / 4, cost[3]],
 			[cost[0], 4, (cost[2] as number) / 4, cost[3]],
 		]);
+		return convertFetchRecord(result, type);
 	} else {
-		return costs;
+		return convertFetchRecord(costs, type);
 	}
 }
 

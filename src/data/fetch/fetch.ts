@@ -1,23 +1,23 @@
 import { DataTable, DateGroupingType, DayInMilliseconds, SecondaryGroupingType } from "../types";
 import { fetchCosts } from "./fetchCosts";
-import { aggregateInvoiceSummary, fetchInvoices } from "./fetchInvoices";
+import { fetchInvoices } from "./fetchInvoices";
 import { fetchOpportunities } from "./fetchOpportunities";
-import { aggregateOrderSummary, fetchOrders } from "./fetchOrders";
-import { FetchRecordSets } from "./types";
+import { fetchOrders } from "./fetchOrders";
+import { FetchTimeRecordSets } from "./types";
 
 export async function aggregatedFetch(
 	datasets: DataTable[],
 	type: DateGroupingType,
 	secondary: SecondaryGroupingType = SecondaryGroupingType.None,
-): Promise<FetchRecordSets> {
+): Promise<FetchTimeRecordSets> {
 	const from = recordNumberToDate(type);
-	const result: FetchRecordSets = {};
+	const result: FetchTimeRecordSets = {};
 
 	for (const dataset of datasets) {
 		if (dataset === "invoice") {
-			result[dataset] = await fetchInvoices(from, type);
+			result[dataset] = await fetchInvoices(from, type, secondary);
 		} else if (dataset === "order") {
-			result[dataset] = await fetchOrders(from, type);
+			result[dataset] = await fetchOrders(from, type, secondary);
 		} else if (dataset === "opportunity") {
 			result[dataset] = await fetchOpportunities(from, type, secondary, false);
 		} else if (dataset === "cost") {
@@ -26,22 +26,6 @@ export async function aggregatedFetch(
 	}
 
 	return result;
-}
-
-export async function summaryFetch(dataset: DataTable): Promise<string> {
-	const from = recordNumberToDate("year", 2);
-
-	try {
-		if (dataset === "invoice") {
-			return await aggregateInvoiceSummary(from);
-		} else if (dataset === "order") {
-			return await aggregateOrderSummary(from);
-		} else {
-			return "";
-		}
-	} catch (e: any) {
-		return e.toString();
-	}
 }
 
 export function recordNumberToDate(type: DateGroupingType, numberOfSets?: number): Date {
