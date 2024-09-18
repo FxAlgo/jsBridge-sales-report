@@ -1,4 +1,4 @@
-import { dataTypeConfig } from "./dataTypeConfig";
+import { ColumnValueTransformer, dataTypeConfig } from "./dataTypeConfig";
 import { FetchRecord, FetchRecordSets } from "./fetch";
 import { DateGroupingType } from "./types";
 
@@ -128,7 +128,8 @@ function calculateValueSummaries(data: DataRecord[], name: string): ValueSummary
 }
 
 function mapFetchRecords(data: FetchRecord[], dateType: DateGroupingType, dataName: string): TempRecord[] {
-	const hasType = data && data.length > 0 && data[0].length > 3;
+	const transformer = dataTypeConfig[dataName].valueIndexTransformer;
+	const hasType = transformer && data && data.length > 0 && data[0].length > 3;
 
 	return data.map(row => {
 		const val = row as string[];
@@ -136,7 +137,7 @@ function mapFetchRecords(data: FetchRecord[], dateType: DateGroupingType, dataNa
 			date: +val[0] * 100 + (val[0] == val[1] ? 0 : +val[1]), // year year fix
 			name: createName(val[0], +val[1], dateType),
 			value: +val[2],
-			type: hasType ? typeToDataType(val[3], dataName) : undefined,
+			type: hasType ? transformColumnValue(val[3], transformer[3]) : undefined,
 		};
 	});
 }
@@ -170,20 +171,14 @@ function consolidateFetchRecord(records: TempRecord[]): DataRecord[] {
 	return arr;
 }
 
-function typeToDataType(type: string, dataName: string): OrderValueIndex {
-	const transformer = dataTypeConfig[dataName].valueIndexTransformer;
-	if (transformer) {
-		return transformer[type] ?? transformer["default"];
+function transformColumnValue(type: string, transformer: ColumnValueTransformer): OrderValueIndex {
+	if (transformer instanceof Object) {
+		const t = transformer as Record<string, number>;
+		return t[type] ?? t["default"];
+	} else if (typeof transformer === "function") {
+		const proc = transformer as (idx: string) => number;
+		return proc(type);
 	}
-	//	if (type == "New" || type == "Personal") {
-	//		return DataType.New;
-	//	} else if (type == "Upsell" || type == "Office") {
-	//		return DataType.Upsell;
-	//	} else if (type == "Renewal" || type == null || type == "Others") {
-	//		return DataType.Renewal;
-	//	} else if (type == "Total") {
-	//		return DataType.Total;
-	//	}
 	return -1 as OrderValueIndex;
 }
 
