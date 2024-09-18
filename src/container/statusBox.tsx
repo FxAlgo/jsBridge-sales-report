@@ -1,7 +1,3 @@
-import { useEffect, useState } from "react";
-import { useDataService } from "../data/dataProvider";
-import { fetchSummary } from "../data/dataSets";
-
 type TextProps = {
 	text?: string;
 	error?: string;
@@ -13,18 +9,4 @@ export const StatusBox = (props: TextProps) => {
 	} else {
 		return <p className="status">{props.text}</p>;
 	}
-};
-
-export const Summary = () => {
-	const [summary, setSummary] = useState<string>("");
-	const service = useDataService();
-
-	useEffect(() => {
-		(async () => {
-			const s = await fetchSummary("order");
-			setSummary(s);
-		})();
-	}, []);
-
-	return <StatusBox text={summary} />;
 };

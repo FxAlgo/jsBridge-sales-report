@@ -4,7 +4,6 @@ import { addEstimates } from "./calculations/estimates";
 import { addRecordsOperation } from "./calculations/operations";
 import { convertFetchRecordSets, DataRecordSet, DataRecordSets, toEuro, toValues } from "./convertFetchRecords";
 import { dataTypeConfig } from "./dataTypeConfig";
-import { summaryFetch } from "./fetch";
 import { getData } from "./getData";
 import { ChartData, DataTable, DateGroupingType } from "./types";
 
@@ -33,9 +32,6 @@ export async function prepareIncomeExpensesChart(type: DateGroupingType): Promis
 	return undefined;
 }
 
-export async function fetchSummary(dataset: DataTable): Promise<string> {
-	return await summaryFetch(dataset);
-}
 function toSalesChartDatasets(dataRecordSets: DataRecordSets): ChartData | undefined {
 	const charDatasets: ChartDataset[] = [];
 	const options: ChartOptions = { ...stackBarsOptions };
