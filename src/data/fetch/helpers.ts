@@ -7,14 +7,14 @@ export async function executeFetch(fetch: MobileCRM.FetchXml.Fetch, dateGrouping
 	return convertFetchRecord(data, dateGrouping);
 }
 
-type CreateNameProc = (year: string, date: number) => string;
+type CreateNameProc = (year: number, date: number) => string;
 
 export function convertFetchRecord(data: FetchRecord[], dateGrouping: DateGroupingType): FetchTimeRecord[] {
 	const createName = getTimeRecordNameProc(dateGrouping);
 	const columns = data && data.length > 0 ? data[0].length : 0;
 
 	return (data as string[][]).map((val: string[]) => ({
-		name: createName(val[0], +val[1]),
+		name: createName(+val[0], +val[1]),
 		date: +val[0] * 100 + (val[0] == val[1] ? 0 : +val[1]), // year year fix
 		value: +val[2],
 		type: columns > 3 ? val[3] : undefined,
@@ -26,13 +26,13 @@ const months: string[] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug"
 
 export function getTimeRecordNameProc(type: DateGroupingType): CreateNameProc {
 	if (type == "year") {
-		return (year: string) => year;
+		return (year: number) => year.toString();
 	} else if (type == "quarter") {
-		return (year: string, date: number) => `${year} Q${date}`;
+		return (year: number, date: number) => `${year} Q${date}`;
 	} else {
-		return (year: string, date: number) => {
+		return (year: number, date: number) => {
 			const month = months[date - 1];
-			return date === 1 ? `${month}-${year.substring(2)}` : month;
+			return date === 1 ? `${month}-${year - 2000}` : month;
 		};
 	}
 }

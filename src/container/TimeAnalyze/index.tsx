@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ButtonGroup } from "../../controls/buttonGroup";
+import { Button, ButtonGroup, ButtonToolbar, FlexboxGrid } from "rsuite";
 import { DateGroupingType } from "../../data/types";
 import { DataProvider } from "../dataProvider";
 import { ChartType, TimeBarCharts } from "./chart";
@@ -15,24 +15,47 @@ export const TimeAnalyze = ({ testFetch }: Props) => {
 	return (
 		<DataProvider>
 			<TimeBarCharts period={period ?? "year"} chartType={chartType} testFetch={testFetch} />
-			<div style={{ display: "flex", justifyContent: "center" }}>
-				<ButtonGroup
-					onSelect={(a: string) => setPeriodType(a as DateGroupingType)}
-					buttons={[
-						{ title: "Y", value: "year" },
-						{ title: "Q", value: "quarter" },
-						{ title: "M", value: "month" },
-					]}
-				/>
-				<ButtonGroup
-					style={{ marginLeft: "0.5rem" }}
-					onSelect={(a: string) => setChartType(a as ChartType)}
-					buttons={[
-						{ title: "Sale", value: "sale" },
-						{ title: "Est. profit", value: "profit" },
-					]}
-				/>
-			</div>
+			<FlexboxGrid justify="center">
+				<PeriodButtonBar appearance="primary" onClick={(a: string) => setPeriodType(a as DateGroupingType)} />
+				<AnalyzeButtonBar appearance="primary" onClick={(a: string) => setChartType(a as ChartType)} />
+			</FlexboxGrid>
 		</DataProvider>
 	);
 };
+
+type ButtonProps = {
+	onClick: (val: string) => void;
+	appearance?: "default" | "primary" | "link" | "subtle";
+};
+
+const PeriodButtonBar = ({ onClick, appearance }: ButtonProps) => (
+	<ButtonToolbar>
+		<ButtonGroup>
+			<Button appearance={appearance} onClick={() => onClick("year")}>
+				{" "}
+				Y{" "}
+			</Button>
+			<Button appearance={appearance} onClick={() => onClick("quarter")}>
+				{" "}
+				Q{" "}
+			</Button>
+			<Button appearance={appearance} onClick={() => onClick("month")}>
+				{" "}
+				M{" "}
+			</Button>
+		</ButtonGroup>
+	</ButtonToolbar>
+);
+
+const AnalyzeButtonBar = ({ onClick, appearance }: ButtonProps) => (
+	<ButtonToolbar style={{ marginLeft: "0.5rem" }}>
+		<ButtonGroup>
+			<Button appearance={appearance} onClick={() => onClick("sale")}>
+				Sale
+			</Button>
+			<Button appearance={appearance} onClick={() => onClick("profit")}>
+				Est. profit
+			</Button>
+		</ButtonGroup>
+	</ButtonToolbar>
+);

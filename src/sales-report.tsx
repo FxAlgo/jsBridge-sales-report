@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
+import "rsuite/dist/rsuite.css";
 import { TimeAnalyze } from "./container/TimeAnalyze";
 import { DataProvider } from "./container/dataProvider";
 import "./sales-report.css";

@@ -79,7 +79,7 @@ function pairByDate(dataSets: DataRecordSets, dateType: DateGroupingType): DataR
 			if (data.length <= idx || data[idx].date !== date) {
 				const year = Math.floor(date / 100);
 				const month = date % 100;
-				const name = createName(year.toString(), month);
+				const name = createName(year, month);
 				data.splice(idx, 0, { date, name, total: 0, values: undefined });
 			}
 		}
