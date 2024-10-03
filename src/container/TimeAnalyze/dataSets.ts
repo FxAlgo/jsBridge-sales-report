@@ -122,18 +122,35 @@ function capitalize(s: string): string {
 
 type TooltipDataset = { data: number[]; stack: string };
 function addTrendTooltip(options: ChartOptions): void {
-	const sumDataset = (dataset: TooltipDataset[], name: string, idx: number) => {
-		let thisTotal = 0;
-		let lastTotal = 0;
+	const toReport = (name: string, thisValue: number, lastValue: number) => {
+		const trend = lastValue ? Math.round(((thisValue - lastValue) * 100) / lastValue) : 0;
+		return `\n${name}: ${toEuro(thisValue)} (${trend}%)`;
+	};
+
+	const sumDataset = (dataset: TooltipDataset[], name: string | undefined, idx: number) => {
+		let thisTotal = 0,
+			thisCosts = 0;
+		let lastTotal = 0,
+			lastCosts = 0;
 		for (const { data, stack } of dataset) {
+			const thisValue = data[idx] as number;
+			const lastValue = data[idx - 1] as number;
 			if (stack === name) {
-				thisTotal += data[idx] as number;
-				lastTotal += data[idx - 1] as number;
+				thisTotal += thisValue;
+				lastTotal += lastValue;
+				if (thisValue < 0) {
+					thisCosts += thisValue;
+					lastCosts += lastValue;
+				}
 			}
 		}
+
+		let result = "";
+		if (thisCosts < 0) {
+			result = toReport("Costs", thisCosts, lastCosts);
+		}
 		if (thisTotal > 0) {
-			const trend = lastTotal ? Math.round(((thisTotal - lastTotal) * 100) / lastTotal) : 0;
-			return `\nTotal: ${toEuro(thisTotal)} (${trend}%)`;
+			return result + toReport("Total", thisTotal, lastTotal);
 		}
 		return "";
 	};
@@ -153,8 +170,9 @@ function addTrendTooltip(options: ChartOptions): void {
 				const trend = lastValue ? Math.round(((thisValue - lastValue) * 100) / lastValue) : 0;
 				let result = `${item.dataset.label} trend: ${trend}%`;
 
-				if (allData && stack) {
-					result += sumDataset(allData as TooltipDataset[], stack, idx);
+				if (allData) {
+					const barData = allData.filter(d => d.type === "bar");
+					result += sumDataset(barData as TooltipDataset[], stack, idx);
 				}
 				return result;
 			}
