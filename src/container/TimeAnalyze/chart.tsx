@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Chart } from "../../controls/charts";
-import { aggregatedFetch } from "../../data/fetch";
+import { fetchInvoices } from "../../data/fetch/fetchInvoices";
 import { ChartData, DateGroupingType, SecondaryGroupingType } from "../../data/types";
 import { useDataService } from "../dataProvider";
 import { StatusBox } from "../statusBox";
@@ -29,7 +29,7 @@ export const TimeBarCharts = ({ period, chartType, testFetch }: Props) => {
 				}
 
 				if (testFetch) {
-					const pureData = await aggregatedFetch(["opportunity"], period, SecondaryGroupingType.PerOwner);
+					const pureData = await fetchInvoices(new Date(2024, 1, 1), period, SecondaryGroupingType.None);
 					setError(JSON.stringify(pureData) + "\n\n\n\n\n\n\n");
 					return;
 				}
