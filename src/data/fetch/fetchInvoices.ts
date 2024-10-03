@@ -31,6 +31,7 @@ export async function fetchInvoices(
 	entity.filter = new MobileCRM.FetchXml.Filter();
 	entity.filter.where("createdon", "on-or-after", formatDate(from));
 	entity.filter.where("statecode", "ne", 3); // 3 = Cancelled
+	entity.filter.where("m000_invoicetypecode", "eq", 200000001); // only invoices, no proforma
 
 	entity.orderBy("Year", false);
 	entity.orderBy("Date", false);
