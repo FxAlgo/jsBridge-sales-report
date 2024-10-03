@@ -41,7 +41,7 @@ export const costs: FetchRecord[] = [
 	[2023, 2023, -1186182, "Office"],
 	[2023, 2023, -4750830, "Others"],
 
-	[2024, 2024, -3316995 - 3 * 175000, "Personal"], // + 3Q US office
+	[2024, 2024, -3318161 - 3 * 175000, "Personal"], // + 3Q US office
 	[2024, 2024, -792144, "Office"],
-	[2024, 2024, -1612410 - 3 * 25000, "Others"], // + 3Q US office
+	[2024, 2024, -1647221 - 3 * 25000, "Others"], // + 3Q US office
 ];
